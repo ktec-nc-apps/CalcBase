@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>calcbase</id>
+	<name>CalcBase</name>
+	<summary>Spreadsheet that writes plain HTML — Calc-compatible formulas, ODS and XLSX import and export, no proprietary format</summary>
+	<summary lang="ja">成果物がそのままHTMLになる表計算 ― Calc互換の式・ODS/XLSXの取り込みと書き出し・独自フォーマットなし</summary>
+	<description><![CDATA[CalcBase is a spreadsheet whose workbooks are ordinary web pages. Every workbook is saved to your Nextcloud Files as a single self-contained .html file with its stylesheet inside it, so it opens in any browser, on any device, for as long as browsers exist — the sheets are shown as tables, with their values, formulas, formats and styles written into the page itself.
+
+Formulas are written as in LibreOffice Calc and Excel: =SUM(B2:B5), Sheet2.A1 or Sheet2!A1, absolute references with $, whole columns and rows. Where Calc and Excel differ, CalcBase follows LibreOffice Calc. Workbooks are calculated in the browser; nothing is sent anywhere.
+
+CalcBase belongs to the same series as EditBase, the word processor whose documents are plain HTML. It is a young program, so bugs may remain.
+
+Features:
+- Workbooks are plain HTML files in your own Files, editable and shareable like any other file; versions are kept beside the workbook
+- Sheets, merged cells, frozen panes, column widths and row heights, number formats (numbers, currency, percent, dates, times, Japanese era dates), fonts, colours, borders and alignment
+- Over 150 functions as in LibreOffice Calc: mathematics, statistics, text, lookup, date and time, logic, information and finance
+- Import of CSV and TSV (UTF-8 and Shift_JIS), ODS and XLSX — values, formulas, number formats, styles, column widths and merged cells, several sheets
+- Export to CSV, ODS and XLSX with formulas, values, formats and styles kept
+- An AI assistant, through the AI-Hub app: a chat beside the sheet that knows spreadsheets and Calc formulas, and proposes changes to cells that are applied as one undoable step
+- Japanese and English interface; light and dark themes
+- HTML5 and CSS first: a workbook is readable without any program but a browser; JavaScript is used only for what HTML and CSS cannot do]]></description>
+	<description lang="ja"><![CDATA[CalcBaseは、ブック（ワークブック）そのものがWebページである表計算です。すべてのブックは、スタイルシートを内包した1枚の独立した .html ファイルとして、あなたのNextcloud Filesに保存されます。どの端末のどのブラウザでも、ブラウザが存在する限り開けます ― シートは表として表示され、値・式・表示形式・書式はページ自体に書き込まれています。
+
+式は LibreOffice Calc や Excel と同じ書き方です：=SUM(B2:B5)、Sheet2.A1 または Sheet2!A1、$ による絶対参照、列全体・行全体。Calc と Excel で振る舞いが違うところは LibreOffice Calc に合わせています。計算はブラウザの中で行われ、どこにも送信されません。
+
+CalcBase は、文書が素の HTML であるワードプロセッサ EditBase と同じシリーズのアプリです。まだ若いプログラムなので、不具合が残っている可能性があります。
+
+主な機能:
+- ブックは自分のFilesの中の素のHTMLファイル ― 他のファイルと同じように編集・共有できます。版はブックの隣に保存されます
+- 複数シート・セルの結合・ウィンドウ枠の固定・列幅と行の高さ・表示形式（数値・通貨・パーセント・日付・時刻・和暦）・フォント・色・罫線・配置
+- LibreOffice Calc と同じ150以上の関数：数学・統計・文字列・検索・日付と時刻・論理・情報・財務
+- CSV / TSV（UTF-8 と Shift_JIS）・ODS・XLSX の取り込み ― 値・式・表示形式・書式・列幅・結合セル・複数シート
+- CSV・ODS・XLSX への書き出し ― 式・値・表示形式・書式を保ったまま
+- AI-Hub アプリを通した AI アシスタント。表計算と Calc の式を知っているチャットがシートの横に出て、セルの変更を提案し、ひとつの取り消せる操作として適用します
+- 日本語と英語の画面、ライトとダークのテーマ
+- HTML5 と CSS が先。ブックはブラウザさえあれば読めます。JavaScript はそれで無理なことにだけ使います]]></description>
+	<version>0.0.1</version>
+	<licence>agpl</licence>
+	<author>KTEC</author>
+	<namespace>CalcBase</namespace>
+	<category>office</category>
+	<category>tools</category>
+	<website>https://github.com/ktec-nc-apps/CalcBase</website>
+	<bugs>https://github.com/ktec-nc-apps/CalcBase/issues</bugs>
+	<repository>https://github.com/ktec-nc-apps/CalcBase</repository>
+	<dependencies>
+		<php min-version="8.1"/>
+		<nextcloud min-version="30" max-version="35"/>
+	</dependencies>
+	<settings>
+		<admin>OCA\CalcBase\Settings\AiAdmin</admin>
+		<admin-section>OCA\CalcBase\Settings\AiSection</admin-section>
+	</settings>
+	<navigations>
+		<navigation>
+			<name>CalcBase</name>
+			<route>calcbase.page.index</route>
+			<icon>app.svg</icon>
+			<order>82</order>
+		</navigation>
+	</navigations>
+</info>

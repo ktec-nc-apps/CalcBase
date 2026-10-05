@@ -1,0 +1,8 @@
+#calcbase-ai-admin fieldset[disabled] { opacity: .5; }
+#calcbase-ai-admin fieldset[disabled] * { cursor: not-allowed; }
+#calcbase-ai-admin h3 { margin: 18px 0 6px; font-size: 15px; font-weight: 600; }
+#calcbase-ai-admin .cb-ai-state { padding: 6px 10px; border-radius: 6px; background: var(--color-background-dark, #f2f2f2); display: inline-block; }
+#calcbase-ai-admin .cb-ai-state.warn { background: var(--color-warning-hover, #fff3cd); }
+#calcbase-ai-admin .cb-ai-groups { margin-left: 28px; }
+#calcbase-ai-admin .cb-ai-groups.dim { opacity: .5; }
+#calcbase-ai-admin .cb-ai-save { margin-top: 16px; display: flex; gap: 12px; align-items: center; }

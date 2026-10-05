@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">
+<!-- The source of tests/fixtures/roundtrip.ods and roundtrip.xlsx: LibreOffice converts this
+     hand-written flat file, so what the tests read is what LibreOffice itself writes. -->
+<office:font-face-decls>
+ <style:font-face style:name="Noto Sans JP" svg:font-family="'Noto Sans JP'"/>
+</office:font-face-decls>
+<office:automatic-styles>
+ <style:style style:name="co1" style:family="table-column"><style:table-column-properties style:column-width="3.5cm"/></style:style>
+ <style:style style:name="co2" style:family="table-column"><style:table-column-properties style:column-width="2.258cm"/></style:style>
+ <style:style style:name="ro1" style:family="table-row"><style:table-row-properties style:row-height="0.9cm" style:use-optimal-row-height="false"/></style:style>
+ <style:style style:name="ro2" style:family="table-row"><style:table-row-properties style:row-height="0.452cm" style:use-optimal-row-height="true"/></style:style>
+ <number:number-style style:name="N2"><number:number number:decimal-places="2" number:min-decimal-places="2" number:min-integer-digits="1" number:grouping="true"/></number:number-style>
+ <number:percentage-style style:name="N11"><number:number number:decimal-places="1" number:min-decimal-places="1" number:min-integer-digits="1"/><number:text>%</number:text></number:percentage-style>
+ <number:date-style style:name="N37"><number:year number:style="long"/><number:text>/</number:text><number:month number:style="long"/><number:text>/</number:text><number:day number:style="long"/></number:date-style>
+ <number:time-style style:name="N41"><number:hours/><number:text>:</number:text><number:minutes number:style="long"/></number:time-style>
+ <number:currency-style style:name="N104"><number:currency-symbol number:language="ja" number:country="JP">¥</number:currency-symbol><number:number number:decimal-places="0" number:min-integer-digits="1" number:grouping="true"/></number:currency-style>
+ <style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="#fff2cc" fo:border="0.74pt solid #000000" style:vertical-align="middle"/><style:paragraph-properties fo:text-align="center" style:text-align-source="fix"/><style:text-properties fo:font-weight="bold" fo:color="#c00000" fo:font-size="14pt" style:font-name="Noto Sans JP"/></style:style>
+ <style:style style:name="ce2" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N2"><style:paragraph-properties fo:text-align="end" style:text-align-source="fix"/></style:style>
+ <style:style style:name="ce3" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N11"><style:text-properties fo:font-style="italic" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color"/></style:style>
+ <style:style style:name="ce4" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N37"/>
+ <style:style style:name="ce5" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N41"/>
+ <style:style style:name="ce6" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N104"><style:table-cell-properties fo:wrap-option="wrap" fo:border-bottom="1.5pt double #0000ff"/></style:style>
+ <style:style style:name="ce7" style:family="table-cell" style:parent-style-name="Default"><style:text-properties style:text-line-through-style="solid" style:text-line-through-type="single"/></style:style>
+</office:automatic-styles>
+<office:body><office:spreadsheet>
+ <table:table table:name="Sales">
+  <table:table-column table:style-name="co1" table:default-cell-style-name="Default"/>
+  <table:table-column table:style-name="co2" table:number-columns-repeated="3" table:default-cell-style-name="Default"/>
+  <table:table-row table:style-name="ro1">
+   <table:table-cell table:style-name="ce1" office:value-type="string" table:number-columns-spanned="2" table:number-rows-spanned="1"><text:p>売上表</text:p></table:table-cell>
+   <table:covered-table-cell/>
+   <table:table-cell office:value-type="string"><text:p>Note</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce7" office:value-type="string"><text:p>old</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>Item</text:p></table:table-cell>
+   <table:table-cell office:value-type="string"><text:p>Amount</text:p></table:table-cell>
+   <table:table-cell office:value-type="string"><text:p>Rate</text:p></table:table-cell>
+   <table:table-cell office:value-type="string"><text:p>Date</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>Apples</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce2" office:value-type="float" office:value="1234.5"><text:p>1,234.50</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce3" office:value-type="percentage" office:value="0.125"><text:p>12.5%</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce4" office:value-type="date" office:date-value="2026-10-05"><text:p>2026/10/05</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>Pears</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce2" office:value-type="float" office:value="100"><text:p>100.00</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce5" office:value-type="time" office:time-value="PT10H30M00S"><text:p>10:30</text:p></table:table-cell>
+   <table:table-cell office:value-type="boolean" office:boolean-value="true"><text:p>TRUE</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>Total</text:p></table:table-cell>
+   <table:table-cell table:style-name="ce6" table:formula="of:=SUM([.B3:.B4])" office:value-type="currency" office:currency="JPY" office:value="1334.5"><text:p>¥1,335</text:p></table:table-cell>
+   <table:table-cell table:formula="of:=IF([.B3]&gt;1000;&quot;big;yes&quot;;&quot;small&quot;)" office:value-type="string" office:string-value="big;yes"><text:p>big;yes</text:p></table:table-cell>
+   <table:table-cell table:formula="of:=[.B4]/0" office:value-type="string" office:string-value=""><text:p>#DIV/0!</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>Other</text:p></table:table-cell>
+   <table:table-cell table:formula="of:=[$Other.B2]*2" office:value-type="float" office:value="84"><text:p>84</text:p></table:table-cell>
+   <table:table-cell table:formula="of:=[$'My sheet'.A1]" office:value-type="string" office:string-value="hello"><text:p>hello</text:p></table:table-cell>
+   <table:table-cell office:value-type="string"><text:p>line one</text:p><text:p>line two</text:p></table:table-cell>
+  </table:table-row>
+ </table:table>
+ <table:table table:name="Other">
+  <table:table-column table:style-name="co2" table:number-columns-repeated="2" table:default-cell-style-name="Default"/>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>x</text:p></table:table-cell>
+   <table:table-cell office:value-type="string"><text:p>y</text:p></table:table-cell>
+  </table:table-row>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="float" office:value="1"><text:p>1</text:p></table:table-cell>
+   <table:table-cell office:value-type="float" office:value="42"><text:p>42</text:p></table:table-cell>
+  </table:table-row>
+ </table:table>
+ <table:table table:name="My sheet">
+  <table:table-column table:style-name="co2" table:default-cell-style-name="Default"/>
+  <table:table-row table:style-name="ro2">
+   <table:table-cell office:value-type="string"><text:p>hello</text:p></table:table-cell>
+  </table:table-row>
+ </table:table>
+</office:spreadsheet></office:body>
+</office:document>
