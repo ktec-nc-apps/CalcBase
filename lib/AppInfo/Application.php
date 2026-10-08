@@ -9,6 +9,7 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\CalcBase\Service\AiService;
+use OCA\CalcBase\Settings\FetchSettings;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'calcbase';
@@ -18,6 +19,9 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
+		// Administration settings, Security: whether a page's tables brought in from
+		// the web may be read from this server itself or a link-local address (WebFetch).
+		$context->registerDeclarativeSettings(FetchSettings::class);
 	}
 
 	public function boot(IBootContext $context): void {

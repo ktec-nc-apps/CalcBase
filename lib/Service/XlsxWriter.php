@@ -22,7 +22,12 @@ final class XlsxWriter {
 	private array $xfXml = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
 	/** @var array<string, int> */
 	private array $fonts = [];
-	private array $fontXml = ['<font><sz val="11"/><name val="Calibri"/><family val="2"/></font>'];
+	/**
+	 * The default font, as Calc writes its own XLSX files: Arial 10. Column widths
+	 * are counted in its digit, which is the same in Excel and in every
+	 * LibreOffice (Arial, or Liberation Sans drawn in its place).
+	 */
+	private array $fontXml = ['<font><sz val="' . XlsxFormat::WRITE_SIZE . '"/><name val="' . XlsxFormat::WRITE_FONT . '"/><family val="2"/></font>'];
 	/** @var array<string, int> */
 	private array $fills = [];
 	private array $fillXml = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
@@ -106,7 +111,21 @@ final class XlsxWriter {
 		foreach ($names as $i => $name) {
 			$out .= '<sheet name="' . self::esc($name) . '" sheetId="' . ($i + 1) . '" r:id="rId' . ($i + 1) . '"/>';
 		}
-		return $out . '</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>';
+		$out .= '</sheets>';
+		// the defined names, as Calc writes them (<definedName>; a sheet's own with its localSheetId)
+		$defined = '';
+		foreach ($this->model['names'] ?? [] as $name => $def) {
+			$defined .= '<definedName name="' . self::esc((string)$name) . '">' . self::esc(FormulaSyntax::toXlsx('=' . $def)) . '</definedName>';
+		}
+		foreach ($this->model['sheets'] as $i => $sheet) {
+			foreach ($sheet['names'] ?? [] as $name => $def) {
+				$defined .= '<definedName localSheetId="' . $i . '" name="' . self::esc((string)$name) . '">' . self::esc(FormulaSyntax::toXlsx('=' . $def)) . '</definedName>';
+			}
+		}
+		if ($defined !== '') {
+			$out .= '<definedNames>' . $defined . '</definedNames>';
+		}
+		return $out . '<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>';
 	}
 
 	private function workbookRels(int $n): string {
@@ -134,7 +153,8 @@ final class XlsxWriter {
 		} else {
 			$out .= '/>';
 		}
-		$out .= '</sheetViews><sheetFormatPr defaultRowHeight="18" customHeight="1"/>';
+		// A column with no width of its own is as wide as the screen shows it.
+		$out .= '</sheetViews><sheetFormatPr defaultColWidth="' . Cells::number(round(XlsxFormat::charsOfPx(Model::DEFAULT_COL_PX), 4)) . '" defaultRowHeight="18" customHeight="1"/>';
 		if ($sheet['cols'] !== []) {
 			$out .= '<cols>';
 			$list = [];
@@ -143,7 +163,7 @@ final class XlsxWriter {
 			}
 			ksort($list);
 			foreach ($list as $n => $px) {
-				$out .= '<col min="' . $n . '" max="' . $n . '" width="' . Cells::number(round(($px - XlsxFormat::COL_PADDING) / XlsxFormat::PX_PER_CHAR, 4)) . '" customWidth="1"/>';
+				$out .= '<col min="' . $n . '" max="' . $n . '" width="' . Cells::number(round(XlsxFormat::charsOfPx((float)$px), 4)) . '" customWidth="1"/>';
 			}
 			$out .= '</cols>';
 		}
@@ -191,7 +211,12 @@ final class XlsxWriter {
 		$attrs = ' r="' . $ref . '"' . ($s > 0 ? ' s="' . $s . '"' : '');
 		$t = $cell['t'] ?? null;
 		$v = $cell['v'] ?? null;
-		$f = isset($cell['f']) ? '<f>' . self::esc(FormulaSyntax::toXlsx($cell['f'])) . '</f>' : '';
+		$f = '';
+		if (isset($cell['f'])) {
+			// an array formula says the range it fills (<f t="array" ref="C63:C63">)
+			$box = isset($cell['a']) ? Cells::parseRange($cell['a']) : null;
+			$f = ($box !== null ? '<f t="array" ref="' . Cells::rangeName(...$box) . '">' : '<f>') . self::esc(FormulaSyntax::toXlsx($cell['f'])) . '</f>';
+		}
 		if ($t === 'n' && is_numeric($v)) {
 			return '<c' . $attrs . '>' . $f . '<v>' . Cells::number((float)$v) . '</v></c>';
 		}
@@ -279,9 +304,9 @@ final class XlsxWriter {
 		$key = json_encode($keys);
 		if (!isset($this->fonts[$key])) {
 			$xml = '<font>' . (!empty($s['b']) ? '<b/>' : '') . (!empty($s['i']) ? '<i/>' : '') . (!empty($s['u']) ? '<u/>' : '') . (!empty($s['strike']) ? '<strike/>' : '')
-				. '<sz val="' . Cells::number($s['size'] ?? 11) . '"/>'
+				. '<sz val="' . Cells::number($s['size'] ?? XlsxFormat::WRITE_SIZE) . '"/>'
 				. (isset($s['color']) ? '<color rgb="FF' . strtoupper(substr($s['color'], 1)) . '"/>' : '')
-				. '<name val="' . self::esc($s['font'] ?? 'Calibri') . '"/><family val="2"/></font>';
+				. '<name val="' . self::esc($s['font'] ?? XlsxFormat::WRITE_FONT) . '"/><family val="2"/></font>';
 			$this->fonts[$key] = count($this->fontXml);
 			$this->fontXml[] = $xml;
 		}

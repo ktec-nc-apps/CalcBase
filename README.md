@@ -28,17 +28,28 @@ It is the spreadsheet of the same series as [EditBase](https://github.com/ktec-n
 the word processor that writes plain HTML, and it is built the same way: HTML5 and
 CSS first, JavaScript only for what they cannot do (here: calculating).
 
+CalcBase is derived from EditBase, the word processor that writes plain HTML: its screen and its way of
+keeping a document as an ordinary HTML file follow EditBase's, and it can bring in the tables of EditBase
+documents.
+
+With the free [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) app, CalcBase can also use a large language
+model (LLM) as an assistant: it explains and writes formulas and changes cells when asked, every change
+undoable. The AI service and its key are set once in AI-Hub, and the assistant stays off until the
+administrator turns it on.
+
 ### Features
 
 - **Formulas as LibreOffice Calc writes them** — `=SUM(B2:B5)`, `=VLOOKUP(A2;Prices.A:B;2;0)`,
   `=IF(C2>0,"yes","no")`; `,` or `;` between arguments, references to other sheets as
   `Sheet2.A1` or `Sheet2!A1`, `$` for absolute references, whole columns and rows.
-- **143 functions** — maths, statistics, logic, text, lookup, date and time (Japanese
+- **494 functions** — maths, statistics, logic, text, lookup, date and time (Japanese
   era dates included), information and finance. Where LibreOffice Calc and Excel
-  differ, Calc is followed; the engine is checked against LibreOffice itself on some
-  1,250 formulas.
-- **A grid that stays fast** — only what is on screen is drawn, so a sheet of 100,000
-  rows scrolls smoothly; a change recalculates only what depends on it.
+  differ, Calc is followed; the engine's test suite (3,563 checks, many of them
+  LibreOffice 24.2's own answers) passes.
+- **A grid that draws only what is on screen**, and recalculates only what a change
+  affects. CalcBase is for tables kept by hand, not for bulk data: a book holds 100,000
+  cells by default, a sheet 30,000 rows and a file 24 MB; the limit can be raised in the
+  settings, at your own risk.
 - Working as in Calc: typing, Enter and Tab, editing in the cell or the formula bar,
   pointing at cells while writing a formula, F4 for `$`, selection with the mouse and
   the keyboard, copy and paste (to and from LibreOffice, Excel and Google Sheets),
@@ -49,7 +60,9 @@ CSS first, JavaScript only for what they cannot do (here: calculating).
   column widths and row heights, freeze panes, sort and an autofilter.
 - Several sheets in a book, renamed, moved and copied from their tabs.
 - **Import** CSV/TSV (UTF-8 or Shift_JIS), ODS and XLSX; **export** CSV, ODS and XLSX,
-  formulas included.
+  formulas included. Import also from the other apps of the series and from Nextcloud:
+  RegiBase, FormulaBase, EditBase, NetBase, Tables, Contacts, Calendar, a web page and a
+  Markdown file.
 - Versions kept beside the workbook (`Book.#01.html` …), autosave, and printing the
   sheet or the selection with a page setup.
 - An **AI assistant**, through the [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) app:
@@ -91,7 +104,7 @@ sudo -u www-data php occ app:enable calcbase
 
 ### Status
 
-0.0.1 — the first shape. Not yet in the App Store.
+0.1.0 — the first public release.
 
 <a id="japanese"></a>
 
@@ -108,23 +121,31 @@ CalcBase で開けば計算する表計算に戻ります。
 同じシリーズの表計算で、作り方も同じです。HTML5 と CSS が先、JavaScript はそれで無理なこと
 （ここでは計算）にだけ使います。
 
+CalcBase は、素の HTML を書き出すワードプロセッサ EditBase から派生したアプリです。画面と、文書を普通の
+HTML ファイルとして保つ仕組みは EditBase に倣い、EditBase の文書の表を取り込むこともできます。
+
+無料の [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを入れると、大規模言語モデル（LLM）を補助として
+使えます。式の説明と作成、頼まれたセルの変更（すべて取り消せます）ができます。AI サービスとキーは AI-Hub で
+一度設定し、管理者が有効にするまで使えません。
+
 ### 主な機能
 
 - **LibreOffice Calc と同じ書き方の式** ― `=SUM(B2:B5)`、`=VLOOKUP(A2;価格.A:B;2;0)`、
   `=IF(C2>0,"はい","いいえ")`。引数の区切りは `,` と `;` のどちらでも、別のシートは
   `Sheet2.A1` でも `Sheet2!A1` でも、`$` の絶対参照、列全体・行全体も書けます。
-- **関数 143 個** ― 数学・統計・論理・文字列・検索/行列・日付/時刻（和暦を含む）・情報・財務。
-  LibreOffice Calc と Excel で違う所は Calc に合わせ、約 1,250 の式で LibreOffice 本体と
-  結果を突き合わせて確かめています。
-- **速いままの格子** ― 画面に見えている所だけを描くので 10 万行のシートも滑らかに動き、
-  変更はそれに関わるセルだけを計算し直します。
+- **関数 494 個** ― 数学・統計・論理・文字列・検索/行列・日付/時刻（和暦を含む）・情報・財務。
+  LibreOffice Calc と Excel で違う所は Calc に合わせ、エンジンの検査（3,563 件・その多くは
+  LibreOffice 24.2 自身の答え）がすべて通っています。
+- **画面に見えている所だけを描く表**で、変更に関わる所だけを再計算します。CalcBase は手で整える
+  表のためのもので、大量のデータ向けではありません。既定では 1 冊 10 万セル・1 シート 3 万行・
+  1 ファイル 24 MB までで、設定で上げられます（自己責任）。
 - Calc と同じ操作：入力、Enter と Tab、セル内と数式バーでの編集、式の入力中にセルを指して参照を入れる、
   F4 で `$`、マウスとキーボードでの選択、コピーと貼り付け（LibreOffice・Excel・Google スプレッドシートとの間でも）、
   フィルハンドル（連続データと式）、行と列の挿入と削除（式が追随）、元に戻す/やり直し、検索と置換。
 - 表示形式（数値・通貨・パーセント・日付・時刻・文字列・自分で書く書式）、フォント、太字・斜体・下線、
   文字色・塗りつぶし・罫線・配置・折り返し、セルの結合、列の幅と行の高さ、ウィンドウ枠の固定、並べ替えとオートフィルター。
 - 1 つのブックに複数のシート。タブから名前の変更・移動・複製ができます。
-- **取り込み**：CSV/TSV（UTF-8 と Shift_JIS）・ODS・XLSX。**書き出し**：CSV・ODS・XLSX（式も含めて）。
+- **取り込み**：CSV/TSV（UTF-8 と Shift_JIS）・ODS・XLSX。**書き出し**：CSV・ODS・XLSX（式も含めて）。同じシリーズのアプリや Nextcloud からも取り込めます：RegiBase・FormulaBase・EditBase・NetBase・Tables・連絡先・カレンダー・Web ページ・Markdown。
 - ブックの横に残る版（`ブック.#01.html` …）、自動保存、シートや選択範囲の用紙設定付きの印刷。
 - [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを通した **AI アシスタント**。表計算を知っているチャットが
   シートの横に出て、式を説明したり書いたりし、頼めばセルを変更します（すべて元に戻せます）。
@@ -164,7 +185,7 @@ sudo -u www-data php occ app:enable calcbase
 
 ### 現在の状態
 
-0.0.1 ― 最初の形です。App Store にはまだ出していません。
+0.1.0 ― 最初の公開版です。
 
 ## Screenshots
 
@@ -174,6 +195,8 @@ sudo -u www-data php occ app:enable calcbase
 | A sheet with formulas / 式の入ったシート | Cell properties / セルのプロパティ |
 | ![Insert function](screenshots/03-functions.png) | ![Settings](screenshots/04-settings.png) |
 | Insert function / 関数の挿入 | Settings / 設定 |
+| ![Bring in sheets from the other apps](screenshots/05-bring-in.png) | |
+| Bring in sheets from the other apps / ほかのアプリから取り込む | |
 
 ## Licence
 

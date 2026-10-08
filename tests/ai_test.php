@@ -46,7 +46,10 @@ check('a question is refused', $ai->ask('bob', [], 'hello', [], 'ja') === ['erro
 
 echo "--- the administrator's settings ---\n";
 $saved = $ai->saveSettings(['enabled' => true, 'users' => 'groups', 'groups' => ['staff', 'nobody', 42], 'search' => '1']);
-check('saved as sent, unknown groups dropped', $saved === ['enabled' => true, 'users' => 'groups', 'groups' => ['staff'], 'search' => true], json_encode($saved));
+check('saved as sent, unknown groups dropped', $saved === ['enabled' => true, 'users' => 'groups', 'groups' => ['staff'], 'read' => [], 'search' => true], json_encode($saved));
+$saved = $ai->saveSettings(['enabled' => true, 'users' => 'all', 'read' => ['regibase', 'nonsense', 'netbase', 42]]);
+check('what it may read: known apps only, in the fixed order', $saved['read'] === ['regibase', 'netbase'], json_encode($saved['read']));
+$ai->saveSettings(['enabled' => true, 'users' => 'groups', 'groups' => ['staff'], 'search' => '1']);
 if ($classThere) {
 	check('a member of the group may ask', $ai->allowed('alice') === true);
 	check('somebody outside it may not', $ai->allowed('bob') === false);
@@ -93,17 +96,22 @@ if ($classThere) {
 
 echo "--- the prompt ---\n";
 $tsv = "Item\tQty\nApples\t3\nTotal\t=SUM(B2:B2) → 3";
-$p = AiScenario::perQuestion(false, ['book' => 'Sales', 'sheets' => ['S1', 'S2'], 'active' => 'S1', 'range' => 'A1:B3', 'tsv' => $tsv, 'selection' => ['range' => 'B3', 'tsv' => '=SUM(B2:B2) → 3']], 'ja');
+$p = AiScenario::perQuestion([], false, ['book' => 'Sales', 'sheets' => ['S1', 'S2'], 'active' => 'S1', 'range' => 'A1:B3', 'tsv' => $tsv, 'selection' => ['range' => 'B3', 'tsv' => '=SUM(B2:B2) → 3']], 'ja');
 check('the book, its sheets and the active sheet are named', str_contains($p, 'The open book "Sales", sheets: S1, S2.') && str_contains($p, 'The active sheet "S1", used range A1:B3'), $p);
 check('the sheet is there as sent', str_contains($p, $tsv));
 check('the selection is there', str_contains($p, 'The writer has selected B3:'));
 check('no web search, Japanese', str_contains($p, 'web search is not allowed') && str_contains($p, 'Answer in Japanese'));
 check('nothing outside the question may be read', str_contains($p, 'You may read nothing outside this question'));
 $long = str_repeat("a\tb\tc\n", 20000);
-$p = AiScenario::perQuestion(true, ['tsv' => $long], 'en');
+$p = AiScenario::perQuestion([], true, ['tsv' => $long], 'en');
 check('a long sheet is cut at the limit, and said so', strlen($p) < 26000 && str_contains($p, 'the rest of the sheet is not shown'), strlen($p) . ' chars');
-$p = AiScenario::perQuestion(true, [], 'en');
+$p = AiScenario::perQuestion([], true, [], 'en');
 check('an empty sheet is said', str_contains($p, 'is empty') && str_contains($p, 'You may search the web'));
 check('the scenario names every function the engine has', str_contains(AiScenario::base(), 'XLOOKUP') && str_contains(AiScenario::base(), 'NETWORKDAYS') && str_contains(AiScenario::base(), '"edits"'));
+$p = AiScenario::perQuestion(['regibase', 'netbase'], false, [], 'en');
+check('with apps allowed, the prompt says how to read them, and only them', str_contains($p, '{"source":"regibase"') && str_contains($p, '{"source":"netbase"}') && !str_contains($p, '{"source":"editbase"') && !str_contains($p, 'read nothing outside'), $p);
+$shapeRead = AiScenario::answerShape();
+check('the answer shape has an optional read', isset($shapeRead['properties']['read']) && !in_array('read', $shapeRead['required'], true));
+check('a reading is cleaned to a known source and plain parameters', AiService::cleanRead(['source' => 'RegiBase', 'collection' => 9, 'nested' => ['x' => 1]]) === ['source' => 'regibase', 'collection' => 9] && AiService::cleanRead(['source' => 'files']) === null && AiService::cleanRead('nope') === null);
 
 finish();

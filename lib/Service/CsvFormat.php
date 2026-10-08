@@ -36,7 +36,7 @@ final class CsvFormat {
 			foreach ($row as $field) {
 				if ($field !== '') {
 					if (++$count > Model::MAX_CELLS) {
-						throw new \InvalidArgumentException('that file has more than ' . Model::MAX_CELLS . ' cells');
+						throw new \InvalidArgumentException(Model::TOO_MANY_CELLS);
 					}
 					$cells[Cells::ref($r, $c)] = self::cell($field);
 				}

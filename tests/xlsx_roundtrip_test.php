@@ -38,7 +38,9 @@ check('Other!B2*2 as typed', ($c['B6'] ?? null) === ['f' => '=Other!B2*2', 't' =
 check("'My sheet'!A1 as typed", ($c['C6'] ?? null) === ['f' => "='My sheet'!A1", 't' => 's', 'v' => 'hello'], json_encode($c['C6'] ?? null));
 check('a line break in a string', ($c['D6']['v'] ?? '') === "line one\nline two" && ($c['D6']['s']['wrap'] ?? 0) === 1, json_encode($c['D6'] ?? null));
 check('the merge, and no cell for the covered one', $m['sheets'][0]['merges'] === ['A1:B1'] && !isset($c['B1']), json_encode($m['sheets'][0]['merges']));
-check('the custom column width (17.88 chars → 130px)', ($m['sheets'][0]['cols']['A'] ?? 0) === 130 && !isset($m['sheets'][0]['cols']['B']), json_encode($m['sheets'][0]['cols']));
+// Widths in digits of the default font (Arial 10 here, 111 twips a digit): 17.88 → 35.0 mm, the 3.5 cm of the
+// source; the other columns in use the sheet's default 11.535 → 22.6 mm, Calc's 2.258 cm (CalcBase BUGS #26).
+check('the custom column width (17.88 digits of Arial 10 → 3.5 cm = 132px), and the default (2.258 cm = 85px) for the others in use', ($m['sheets'][0]['cols'] ?? null) === ['A' => 132, 'B' => 85, 'C' => 85, 'D' => 85], json_encode($m['sheets'][0]['cols']));
 check('a row height set by hand (25.5pt → 34px), not the others', $m['sheets'][0]['rows'] === ['1' => 34], json_encode($m['sheets'][0]['rows']));
 
 echo "--- written out and read back ---\n";
@@ -65,7 +67,7 @@ $sheetXml = '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://sche
 $rc = new ReflectionClass(XlsxFormat::class);
 $sheetFn = $rc->getMethod('sheet');
 $count = 0;
-$shared = $sheetFn->invokeArgs(null, [$sheetXml, 'S', [], [], false, &$count]);
+$shared = $sheetFn->invokeArgs(null, [$sheetXml, 'S', [], [], false, &$count, XlsxFormat::digitMm('Calibri', 11)]);
 check('a shared formula is unfolded to each cell', ($shared['cells']['B2']['f'] ?? '') === '=A2*2' && ($shared['cells']['B3']['f'] ?? '') === '=A3*2', json_encode($shared['cells']));
 
 echo "--- the ODS fixture written as XLSX ---\n";

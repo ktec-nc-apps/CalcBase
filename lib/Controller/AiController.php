@@ -48,6 +48,7 @@ class AiController extends Controller {
 		$history = $this->request->getParam('history', []);
 		$context = $this->request->getParam('context', []);
 		$message = $this->request->getParam('message', '');
+		$images = $this->request->getParam('images', []);
 		// The app's own language setting first, Nextcloud's when the app follows it.
 		$lang = $this->config->getUserValue($uid, Application::APP_ID, 'language', 'auto');
 		if (!is_string($lang) || $lang === 'auto' || $lang === '') {
@@ -59,6 +60,7 @@ class AiController extends Controller {
 			is_string($message) ? mb_substr($message, 0, 20000) : '',
 			is_array($context) ? $context : [],
 			str_starts_with((string)$lang, 'ja') ? 'ja' : (string)$lang,
+			is_array($images) ? $images : [],
 		);
 		$status = isset($out['error']) ? ($out['error'] === 'not-allowed' ? Http::STATUS_FORBIDDEN : Http::STATUS_SERVICE_UNAVAILABLE) : Http::STATUS_OK;
 		return new JSONResponse($out, $status);
@@ -79,6 +81,7 @@ class AiController extends Controller {
 			'enabled' => $this->request->getParam('enabled'),
 			'users' => $this->request->getParam('users'),
 			'groups' => $this->request->getParam('groups', []),
+			'read' => $this->request->getParam('read', []),
 			'search' => $this->request->getParam('search'),
 		]));
 	}

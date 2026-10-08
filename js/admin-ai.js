@@ -19,6 +19,7 @@
 				enabled: root.querySelector('#cb-ai-enabled').checked,
 				users: users ? users.value : 'all',
 				groups: Array.prototype.map.call(root.querySelectorAll('input[data-group]:checked'), function (x) { return x.getAttribute('data-group'); }),
+				read: Array.prototype.map.call(root.querySelectorAll('input[data-read]:checked'), function (x) { return x.getAttribute('data-read'); }),
 				search: root.querySelector('#cb-ai-search').checked,
 			};
 			msg.textContent = '';

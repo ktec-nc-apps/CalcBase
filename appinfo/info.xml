@@ -8,14 +8,16 @@
 
 Formulas are written as in LibreOffice Calc and Excel: =SUM(B2:B5), Sheet2.A1 or Sheet2!A1, absolute references with $, whole columns and rows. Where Calc and Excel differ, CalcBase follows LibreOffice Calc. Workbooks are calculated in the browser; nothing is sent anywhere.
 
-CalcBase belongs to the same series as EditBase, the word processor whose documents are plain HTML. It is a young program, so bugs may remain.
+CalcBase is derived from EditBase, the word processor whose documents are plain HTML. With the free AI-Hub app it can also use a large language model (LLM) as an assistant, set up once for every app on the server. It is a young program, so bugs may remain.
 
 Features:
 - Workbooks are plain HTML files in your own Files, editable and shareable like any other file; versions are kept beside the workbook
 - Sheets, merged cells, frozen panes, column widths and row heights, number formats (numbers, currency, percent, dates, times, Japanese era dates), fonts, colours, borders and alignment
-- Over 150 functions as in LibreOffice Calc: mathematics, statistics, text, lookup, date and time, logic, information and finance
+- About 500 functions as in LibreOffice Calc: mathematics, statistics, text, lookup, date and time, logic, information and finance
 - Import of CSV and TSV (UTF-8 and Shift_JIS), ODS and XLSX — values, formulas, number formats, styles, column widths and merged cells, several sheets
 - Export to CSV, ODS and XLSX with formulas, values, formats and styles kept
+- Import also from RegiBase, FormulaBase, EditBase, NetBase, Tables, Contacts and Calendar, from a web page and from a Markdown file
+- For tables kept by hand, not bulk data: 100,000 cells a book by default, 30,000 rows a sheet, 24 MB a file — raised in the settings at your own risk
 - An AI assistant, through the AI-Hub app: a chat beside the sheet that knows spreadsheets and Calc formulas, and proposes changes to cells that are applied as one undoable step
 - Japanese and English interface; light and dark themes
 - HTML5 and CSS first: a workbook is readable without any program but a browser; JavaScript is used only for what HTML and CSS cannot do]]></description>
@@ -23,18 +25,20 @@ Features:
 
 式は LibreOffice Calc や Excel と同じ書き方です：=SUM(B2:B5)、Sheet2.A1 または Sheet2!A1、$ による絶対参照、列全体・行全体。Calc と Excel で振る舞いが違うところは LibreOffice Calc に合わせています。計算はブラウザの中で行われ、どこにも送信されません。
 
-CalcBase は、文書が素の HTML であるワードプロセッサ EditBase と同じシリーズのアプリです。まだ若いプログラムなので、不具合が残っている可能性があります。
+CalcBase は、文書が素の HTML であるワードプロセッサ EditBase から派生したアプリです。無料の AI-Hub アプリを入れると、大規模言語モデル（LLM）を補助として使えます（設定はサーバー内の全アプリ分を一度に行います）。まだ若いプログラムなので、不具合が残っている可能性があります。
 
 主な機能:
 - ブックは自分のFilesの中の素のHTMLファイル ― 他のファイルと同じように編集・共有できます。版はブックの隣に保存されます
 - 複数シート・セルの結合・ウィンドウ枠の固定・列幅と行の高さ・表示形式（数値・通貨・パーセント・日付・時刻・和暦）・フォント・色・罫線・配置
-- LibreOffice Calc と同じ150以上の関数：数学・統計・文字列・検索・日付と時刻・論理・情報・財務
+- LibreOffice Calc と同じ約500の関数：数学・統計・文字列・検索・日付と時刻・論理・情報・財務
 - CSV / TSV（UTF-8 と Shift_JIS）・ODS・XLSX の取り込み ― 値・式・表示形式・書式・列幅・結合セル・複数シート
 - CSV・ODS・XLSX への書き出し ― 式・値・表示形式・書式を保ったまま
+- RegiBase・FormulaBase・EditBase・NetBase・Tables・連絡先・カレンダー・Web ページ・Markdown からの取り込み
+- 手で整える表のためのアプリです。大量のデータ向けではありません。既定は 1 冊 10 万セル・1 シート 3 万行・1 ファイル 24 MB までで、設定で上げられます（自己責任）
 - AI-Hub アプリを通した AI アシスタント。表計算と Calc の式を知っているチャットがシートの横に出て、セルの変更を提案し、ひとつの取り消せる操作として適用します
 - 日本語と英語の画面、ライトとダークのテーマ
 - HTML5 と CSS が先。ブックはブラウザさえあれば読めます。JavaScript はそれで無理なことにだけ使います]]></description>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<licence>agpl</licence>
 	<author>KTEC</author>
 	<namespace>CalcBase</namespace>
@@ -43,6 +47,11 @@ CalcBase は、文書が素の HTML であるワードプロセッサ EditBase �
 	<website>https://github.com/ktec-nc-apps/CalcBase</website>
 	<bugs>https://github.com/ktec-nc-apps/CalcBase/issues</bugs>
 	<repository>https://github.com/ktec-nc-apps/CalcBase</repository>
+	<screenshot>https://raw.githubusercontent.com/ktec-nc-apps/CalcBase/main/screenshots/01-sheet.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/ktec-nc-apps/CalcBase/main/screenshots/02-cell-properties.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/ktec-nc-apps/CalcBase/main/screenshots/03-functions.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/ktec-nc-apps/CalcBase/main/screenshots/04-settings.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/ktec-nc-apps/CalcBase/main/screenshots/05-bring-in.png</screenshot>
 	<dependencies>
 		<php min-version="8.1"/>
 		<nextcloud min-version="30" max-version="35"/>

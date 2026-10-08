@@ -1,0 +1,3967 @@
+{
+ "typed": {
+  "2026/10/5": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "26/10/5": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2026/10/05": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2026-10-5": {
+   "shown": "2026-10-05",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "YYYY-MM-DD"
+  },
+  "2026-1-2": {
+   "shown": "2026-01-02",
+   "value": 46024.0,
+   "type": "VALUE",
+   "format": "YYYY-MM-DD"
+  },
+  "1-2-3": {
+   "shown": "2001-02-03",
+   "value": 36925.0,
+   "type": "VALUE",
+   "format": "YYYY-MM-DD"
+  },
+  "2026.10.5": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "10-5": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "10/5": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2026/10": {
+   "shown": "2026/10",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "2026年10月": {
+   "shown": "2026年10月",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "10月5日": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2026年10月5日": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2026年1月2日": {
+   "shown": "1月2日",
+   "value": 46024.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "R8/10/5": {
+   "shown": "R8/10/5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "H31/4/30": {
+   "shown": "H31/4/30",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "2026/10/5 10:30": {
+   "shown": "2026/10/5 10:30",
+   "value": 46300.4375,
+   "type": "VALUE",
+   "format": "YYYY/M/D H:MM"
+  },
+  "2026/10/5 10:30:15": {
+   "shown": "2026/10/5 10:30",
+   "value": 46300.43767361111,
+   "type": "VALUE",
+   "format": "YYYY/M/D H:MM"
+  },
+  "2026-10-05 10:30": {
+   "shown": "2026-10-05 10:30:00",
+   "value": 46300.4375,
+   "type": "VALUE",
+   "format": "YYYY-MM-DD HH:MM:SS"
+  },
+  "2026-10-05T10:30": {
+   "shown": "2026-10-05T10:30:00",
+   "value": 46300.4375,
+   "type": "VALUE",
+   "format": "YYYY-MM-DD\"T\"HH:MM:SS"
+  },
+  "10月5日 10:30": {
+   "shown": "2026/10/5 10:30",
+   "value": 46300.4375,
+   "type": "VALUE",
+   "format": "YYYY/M/D H:MM"
+  },
+  "2026/2/29": {
+   "shown": "2026/2/29",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1582/10/14": {
+   "shown": "1582/10/14",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1583/1/1": {
+   "shown": "1月1日",
+   "value": -115780.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "99/1/2": {
+   "shown": "1月2日",
+   "value": 36162.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "29/1/2": {
+   "shown": "1月2日",
+   "value": 47120.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "30/1/2": {
+   "shown": "1月2日",
+   "value": 10960.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "10:30": {
+   "shown": "10:30:00",
+   "value": 0.4375,
+   "type": "VALUE",
+   "format": "HH:MM:SS"
+  },
+  "10:30:15": {
+   "shown": "10:30:15",
+   "value": 0.43767361111111114,
+   "type": "VALUE",
+   "format": "HH:MM:SS"
+  },
+  "10:30:15.5": {
+   "shown": "10:30:15.50",
+   "value": 0.43767939814814816,
+   "type": "VALUE",
+   "format": "[HH]:MM:SS.00"
+  },
+  "10:30:15.123": {
+   "shown": "10:30:15.12",
+   "value": 0.43767503472222224,
+   "type": "VALUE",
+   "format": "[HH]:MM:SS.00"
+  },
+  "25:00": {
+   "shown": "25:00:00",
+   "value": 1.0416666666666667,
+   "type": "VALUE",
+   "format": "[HH]:MM:SS"
+  },
+  "1:60": {
+   "shown": "1:60",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "12:00 PM": {
+   "shown": "12:00 PM",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "10:30 AM": {
+   "shown": "10:30 AM",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "10:30AM": {
+   "shown": "10:30AM",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "午後1:30": {
+   "shown": "午後1:30",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "0:30": {
+   "shown": "00:30:00",
+   "value": 0.020833333333333332,
+   "type": "VALUE",
+   "format": "HH:MM:SS"
+  },
+  "100:00": {
+   "shown": "100:00:00",
+   "value": 4.166666666666667,
+   "type": "VALUE",
+   "format": "[HH]:MM:SS"
+  },
+  "10:30:60": {
+   "shown": "10:30:60",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1,234": {
+   "shown": "1234",
+   "value": 1234.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "1,23": {
+   "shown": "1,23",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "１，２３４": {
+   "shown": "1234",
+   "value": 1234.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "１２３４．５": {
+   "shown": "1234.5",
+   "value": 1234.5,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "−5": {
+   "shown": "-5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "－5": {
+   "shown": "－5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "△5": {
+   "shown": "△5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "12%": {
+   "shown": "12%",
+   "value": 0.12,
+   "type": "VALUE",
+   "format": "0%"
+  },
+  "１２％": {
+   "shown": "１２％",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "12 %": {
+   "shown": "12%",
+   "value": 0.12,
+   "type": "VALUE",
+   "format": "0%"
+  },
+  "1e3": {
+   "shown": "1.00E+03",
+   "value": 1000.0,
+   "type": "VALUE",
+   "format": "0.00E+00"
+  },
+  "1E+3": {
+   "shown": "1.00E+03",
+   "value": 1000.0,
+   "type": "VALUE",
+   "format": "0.00E+00"
+  },
+  "1.5e-3": {
+   "shown": "1.50E-03",
+   "value": 0.0015,
+   "type": "VALUE",
+   "format": "0.00E+00"
+  },
+  "(5)": {
+   "shown": "-5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "5-": {
+   "shown": "-5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "+5": {
+   "shown": "5",
+   "value": 5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  " 5 ": {
+   "shown": "5",
+   "value": 5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  ".5": {
+   "shown": "0.5",
+   "value": 0.5,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "5.": {
+   "shown": "5",
+   "value": 5.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "0123": {
+   "shown": "123",
+   "value": 123.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "1 1/2": {
+   "shown": "1 1/2",
+   "value": 1.5,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "3/4": {
+   "shown": "3月4日",
+   "value": 46085.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "2 3/4": {
+   "shown": "2 3/4",
+   "value": 2.75,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "0 1/2": {
+   "shown": " 1/2",
+   "value": 0.5,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "-1 1/2": {
+   "shown": "-1 1/2",
+   "value": -1.5,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "1 3/16": {
+   "shown": "1 1/5",
+   "value": 1.1875,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "13/4": {
+   "shown": "13/4",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1/32": {
+   "shown": "1/32",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1 1/0": {
+   "shown": "1 1/0",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1 3/2": {
+   "shown": "2 1/2",
+   "value": 2.5,
+   "type": "VALUE",
+   "format": "# ?/?"
+  },
+  "￥1,200": {
+   "shown": "￥1,200",
+   "value": 1200.0,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "￥-5": {
+   "shown": "-￥5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "-￥5": {
+   "shown": "-￥5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "￥1,200.5": {
+   "shown": "￥1,201",
+   "value": 1200.5,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "￥ 1,200": {
+   "shown": "￥1,200",
+   "value": 1200.0,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "¥1,200": {
+   "shown": "¥1,200",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "$5": {
+   "shown": "$5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "＄5": {
+   "shown": "＄5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "€5": {
+   "shown": "€5",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1,200円": {
+   "shown": "1,200円",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "(￥5)": {
+   "shown": "-￥5",
+   "value": -5.0,
+   "type": "VALUE",
+   "format": "[$￥-411]#,##0;[RED]-[$￥-411]#,##0"
+  },
+  "TRUE": {
+   "shown": "TRUE",
+   "value": 1.0,
+   "type": "VALUE",
+   "format": "BOOLEAN"
+  },
+  "true": {
+   "shown": "TRUE",
+   "value": 1.0,
+   "type": "VALUE",
+   "format": "BOOLEAN"
+  },
+  "ＴＲＵＥ": {
+   "shown": "ＴＲＵＥ",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "1 000": {
+   "shown": "1 000",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  },
+  "１２３": {
+   "shown": "123",
+   "value": 123.0,
+   "type": "VALUE",
+   "format": "General"
+  },
+  "１/２": {
+   "shown": "1月2日",
+   "value": 46024.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "２０２６/１０/５": {
+   "shown": "10月5日",
+   "value": 46300.0,
+   "type": "VALUE",
+   "format": "M\"月\"D\"日\""
+  },
+  "１０：３０": {
+   "shown": "１０：３０",
+   "value": 0.0,
+   "type": "TEXT",
+   "format": "General"
+  }
+ },
+ "fill": [
+  {
+   "seed": [
+    "Mon"
+   ],
+   "cells": [
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Monday"
+   ],
+   "cells": [
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Monday",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Jan"
+   ],
+   "cells": [
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Jan",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "January"
+   ],
+   "cells": [
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "January",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "月"
+   ],
+   "cells": [
+    {
+     "shown": "月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "火",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "木",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "金",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "土",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "月曜日"
+   ],
+   "cells": [
+    {
+     "shown": "月曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "火曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "木曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "金曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "土曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "日曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "月曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "日"
+   ],
+   "cells": [
+    {
+     "shown": "日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "火",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "木",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "金",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "土",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1月"
+   ],
+   "cells": [
+    {
+     "shown": "1月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "12月"
+   ],
+   "cells": [
+    {
+     "shown": "12月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "1月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Q1"
+   ],
+   "cells": [
+    {
+     "shown": "Q1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "第1回"
+   ],
+   "cells": [
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1-A"
+   ],
+   "cells": [
+    {
+     "shown": "1-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "A-1"
+   ],
+   "cells": [
+    {
+     "shown": "A-1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1A"
+   ],
+   "cells": [
+    {
+     "shown": "1A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "A1"
+   ],
+   "cells": [
+    {
+     "shown": "A1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "No.1"
+   ],
+   "cells": [
+    {
+     "shown": "No.1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "No.8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1番"
+   ],
+   "cells": [
+    {
+     "shown": "1番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8番",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1st"
+   ],
+   "cells": [
+    {
+     "shown": "1st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8st",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Item 1"
+   ],
+   "cells": [
+    {
+     "shown": "Item 1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Item 01"
+   ],
+   "cells": [
+    {
+     "shown": "Item 01",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 02",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 03",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 04",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 05",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 06",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 07",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 08",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "001"
+   ],
+   "cells": [
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "5",
+     "value": 5.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "6",
+     "value": 6.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "7",
+     "value": 7.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "8",
+     "value": 8.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "abc1def"
+   ],
+   "cells": [
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "abc1def",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1.5.2"
+   ],
+   "cells": [
+    {
+     "shown": "5月2日",
+     "value": 37013.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月3日",
+     "value": 37014.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月4日",
+     "value": 37015.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月5日",
+     "value": 37016.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月6日",
+     "value": 37017.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月7日",
+     "value": 37018.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月8日",
+     "value": 37019.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月9日",
+     "value": 37020.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1 2"
+   ],
+   "cells": [
+    {
+     "shown": "1 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8 2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "x 1 y"
+   ],
+   "cells": [
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x 1 y",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "10:00"
+   ],
+   "cells": [
+    {
+     "shown": "10:00:00",
+     "value": 0.4166666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 1.4166666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 2.4166666666666665,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 3.4166666666666665,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 4.416666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 5.416666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 6.416666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "10:00:00",
+     "value": 7.416666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/10/5"
+   ],
+   "cells": [
+    {
+     "shown": "10月5日",
+     "value": 46300.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月6日",
+     "value": 46301.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月7日",
+     "value": 46302.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月8日",
+     "value": 46303.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月9日",
+     "value": 46304.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月10日",
+     "value": 46305.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月11日",
+     "value": 46306.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "10月12日",
+     "value": 46307.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/1/31",
+    "2026/2/28"
+   ],
+   "cells": [
+    {
+     "shown": "1月31日",
+     "value": 46053.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月28日",
+     "value": 46081.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "3月31日",
+     "value": 46112.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "4月30日",
+     "value": 46142.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月31日",
+     "value": 46173.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "6月30日",
+     "value": 46203.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "7月31日",
+     "value": 46234.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "8月31日",
+     "value": 46265.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/1/31"
+   ],
+   "cells": [
+    {
+     "shown": "1月31日",
+     "value": 46053.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月1日",
+     "value": 46054.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月2日",
+     "value": 46055.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月3日",
+     "value": 46056.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月4日",
+     "value": 46057.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月5日",
+     "value": 46058.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月6日",
+     "value": 46059.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月7日",
+     "value": 46060.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/1/31",
+    "2026/3/31"
+   ],
+   "cells": [
+    {
+     "shown": "1月31日",
+     "value": 46053.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "3月31日",
+     "value": 46112.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月31日",
+     "value": 46173.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "7月31日",
+     "value": 46234.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "9月30日",
+     "value": 46295.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "11月30日",
+     "value": 46356.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月31日",
+     "value": 46418.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "3月31日",
+     "value": 46477.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/1/30",
+    "2026/2/28"
+   ],
+   "cells": [
+    {
+     "shown": "1月30日",
+     "value": 46052.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "2月28日",
+     "value": 46081.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "3月29日",
+     "value": 46110.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "4月27日",
+     "value": 46139.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月26日",
+     "value": 46168.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "6月24日",
+     "value": 46197.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "7月23日",
+     "value": 46226.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "8月21日",
+     "value": 46255.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026/2/28",
+    "2026/3/31"
+   ],
+   "cells": [
+    {
+     "shown": "2月28日",
+     "value": 46081.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "3月31日",
+     "value": 46112.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "4月30日",
+     "value": 46142.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "5月31日",
+     "value": 46173.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "6月30日",
+     "value": 46203.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "7月31日",
+     "value": 46234.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "8月31日",
+     "value": 46265.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "9月30日",
+     "value": 46295.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1",
+    "2",
+    "4"
+   ],
+   "cells": [
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "5",
+     "value": 5.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "子"
+   ],
+   "cells": [
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "子",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "睦月"
+   ],
+   "cells": [
+    {
+     "shown": "睦月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "如月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "弥生",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "卯月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "皐月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水無月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "文月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "葉月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "一月"
+   ],
+   "cells": [
+    {
+     "shown": "一月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "二月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "三月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "四月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "五月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "六月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "七月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "八月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1回目"
+   ],
+   "cells": [
+    {
+     "shown": "1回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "6回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "8回目",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Mon",
+    "Wed"
+   ],
+   "cells": [
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Wed",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Wed",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Wed",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Mon",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Wed",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1月",
+    "3月"
+   ],
+   "cells": [
+    {
+     "shown": "1月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "5月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "7月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "9月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "11月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "1月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "TRUE",
+    "FALSE"
+   ],
+   "cells": [
+    {
+     "shown": "TRUE",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "FALSE",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "TRUE",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "FALSE",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "TRUE",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "FALSE",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "TRUE",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    },
+    {
+     "shown": "FALSE",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "BOOLEAN"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "a",
+    "b"
+   ],
+   "cells": [
+    {
+     "shown": "a",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "b",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "b",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "b",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "b",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "-1"
+   ],
+   "cells": [
+    {
+     "shown": "-1",
+     "value": -1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "0",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "5",
+     "value": 5.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "6",
+     "value": 6.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1-1"
+   ],
+   "cells": [
+    {
+     "shown": "1月1日",
+     "value": 46023.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月2日",
+     "value": 46024.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月3日",
+     "value": 46025.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月4日",
+     "value": 46026.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月5日",
+     "value": 46027.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月6日",
+     "value": 46028.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月7日",
+     "value": 46029.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    },
+    {
+     "shown": "1月8日",
+     "value": 46030.0,
+     "type": "VALUE",
+     "format": "M\"月\"D\"日\""
+    }
+   ]
+  },
+  {
+   "seed": [
+    "x-1-1"
+   ],
+   "cells": [
+    {
+     "shown": "x-1-1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "x-1-8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "日曜日"
+   ],
+   "cells": [
+    {
+     "shown": "日曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "月曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "火曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "木曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "金曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "土曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "日曜日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "火",
+    "木"
+   ],
+   "cells": [
+    {
+     "shown": "火",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "木",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "土",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "月",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "水",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "金",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "日",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "火",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Item 1",
+    "Item 3"
+   ],
+   "cells": [
+    {
+     "shown": "Item 1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 9",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 11",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 13",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 15",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "第1回",
+    "第2回"
+   ],
+   "cells": [
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第2回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第2回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第2回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第1回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "第2回",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "A1",
+    "A3"
+   ],
+   "cells": [
+    {
+     "shown": "A1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A9",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A11",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A13",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A15",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "10:00",
+    "11:00"
+   ],
+   "cells": [
+    {
+     "shown": "10:00:00",
+     "value": 0.4166666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "11:00:00",
+     "value": 0.45833333333333337,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "12:00:00",
+     "value": 0.5,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "13:00:00",
+     "value": 0.5416666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "14:00:00",
+     "value": 0.5833333333333334,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "15:00:00",
+     "value": 0.625,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "16:00:00",
+     "value": 0.6666666666666667,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    },
+    {
+     "shown": "17:00:00",
+     "value": 0.7083333333333334,
+     "type": "VALUE",
+     "format": "HH:MM:SS"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1.5"
+   ],
+   "cells": [
+    {
+     "shown": "1.5",
+     "value": 1.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2.5",
+     "value": 2.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3.5",
+     "value": 3.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4.5",
+     "value": 4.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "5.5",
+     "value": 5.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "6.5",
+     "value": 6.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "7.5",
+     "value": 7.5,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "8.5",
+     "value": 8.5,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "abc",
+    "1"
+   ],
+   "cells": [
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1",
+    "abc"
+   ],
+   "cells": [
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "abc",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "A-9"
+   ],
+   "cells": [
+    {
+     "shown": "A-9",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-10",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-11",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-12",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-13",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-14",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-15",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "A-16",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Item 99"
+   ],
+   "cells": [
+    {
+     "shown": "Item 99",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 100",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 101",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 102",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 103",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 104",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 105",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item 106",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Item -1"
+   ],
+   "cells": [
+    {
+     "shown": "Item -1",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Item -8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "-A"
+   ],
+   "cells": [
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "-A",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "1-"
+   ],
+   "cells": [
+    {
+     "shown": "-1",
+     "value": -1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "0",
+     "value": 0.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "1",
+     "value": 1.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2",
+     "value": 2.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "3",
+     "value": 3.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "4",
+     "value": 4.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "5",
+     "value": 5.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "6",
+     "value": 6.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "a1b2"
+   ],
+   "cells": [
+    {
+     "shown": "a1b2",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b3",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "a1b9",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "Q4"
+   ],
+   "cells": [
+    {
+     "shown": "Q4",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q5",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q6",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q7",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q8",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q9",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q10",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "Q11",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "2026"
+   ],
+   "cells": [
+    {
+     "shown": "2026",
+     "value": 2026.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2027",
+     "value": 2027.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2028",
+     "value": 2028.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2029",
+     "value": 2029.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2030",
+     "value": 2030.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2031",
+     "value": 2031.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2032",
+     "value": 2032.0,
+     "type": "VALUE",
+     "format": "General"
+    },
+    {
+     "shown": "2033",
+     "value": 2033.0,
+     "type": "VALUE",
+     "format": "General"
+    }
+   ]
+  },
+  {
+   "seed": [
+    "令和1年"
+   ],
+   "cells": [
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    },
+    {
+     "shown": "令和1年",
+     "value": 0.0,
+     "type": "TEXT",
+     "format": "General"
+    }
+   ]
+  }
+ ]
+}

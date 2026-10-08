@@ -2,6 +2,8 @@
 // { f, diff: 'why the engine is allowed to differ' } for a known difference.
 // They run in column A of Sheet1 and may read the fixture sheets below.
 
+import { MORE_FIXTURES, MORE_CASES, MORE_LAYOUTS } from './cases-more.mjs';
+
 export const FIXTURES = [
   { name: 'D', rows: [
     [21, 'x', '=""', true, '=2', '', { d: '2026-10-05' }, 0.5],
@@ -28,7 +30,7 @@ export const CASES = [
   '=1/3', '=1/3&""', '=1E20', '=1E15', '=1E16', '=123456789012345678', '=0.000001', '=0.0000001', '=2/3*1E10', '=-1/7', '=0.1+0.2', '=0.1+0.2=0.3', '=1E15+0.5', '=100000*100000*100000', '=1.5E-7', '=12345678901234.5678', '=0.1+0.7', '=1234567890.123456789',
   '=1E-5', '=1.5E-6', '=1E-9', '=1.5E-9', '=1E-10', '=1.5E-10', '=0.00012345678901234', '=1.234567891E-7', '=1.2345678912E-7', '=0.1234567890123456', '=0.00001234567890123456', '=1.23456789012E-6', '=1.2345678901E-6', '=-1.2E-10', '=-0.000001234', '=1E-15', '=-0', '=0*-1', '=1.5E15', '=999999999999999.9', '=123456789012345.6', '=1234567890123456', '=12345678901234567', '=2^53', '=2^63', '=1.5E300', '=1E14/3', '=1E5/3', '=0.1*3', '=1.1*1.1', '=100*1.1',
   // errors and parsing
-  '=SQRT(-1)', '=LOG(-1)', '=LN(0)', '=FACT(-1)', { f: '=FACT(170)', diff: 'the last digits of 170! differ (LibreOffice 7.257415615308E+306, the engine 7.25741561530799E+306; the exact value is 7.2574156153079990E+306)' }, '=FACT(171)', '=MOD(5;0)', '=(1+', '=1 2', '=FOO(1)', '=1+', '=SUM(1;2', '=)', '=1;2', '=#REF!', '=D.A1:A2', '=ABS()', '=ABS(1;2)', '=SUM()', '=PI(1)', '=IF()', '=#N/A', '=ISNA(#N/A)', '=ABS("3")', '=ROUND("2.5")', '=ABS("x")',
+  '=SQRT(-1)', '=LOG(-1)', '=LN(0)', '=FACT(-1)', '=FACT(170)', '=FACT(171)', '=MOD(5;0)', '=(1+', '=1 2', '=FOO(1)', '=1+', '=SUM(1;2', '=)', '=1;2', '=#REF!', '=D.A1:A2', '=ABS()', '=ABS(1;2)', '=SUM()', '=PI(1)', '=IF()', '=#N/A', '=ISNA(#N/A)', '=ABS("3")', '=ROUND("2.5")', '=ABS("x")',
   // math
   '=CEILING(-2.5)', '=FLOOR(-2.5)', '=CEILING(2.5)', '=FLOOR(2.5)', '=CEILING(2.5;2)', '=CEILING(-2.5;-2)', '=CEILING(-2.5;2)', '=CEILING(2.5;-2)', '=FLOOR(-2.5;-2)', '=FLOOR(-2.5;2)', '=CEILING(-2.5;1;1)', '=CEILING(0;0)', '=CEILING(5;0)', '=FLOOR(5;0)', '=CEILING(7;3)', '=FLOOR(7;3)', '=CEILING(-7;-3;1)', '=FLOOR(-7;-3;1)', '=CEILING(2.4;0.5)',
   '=MROUND(10;3)', '=MROUND(-10;-3)', '=MROUND(-10;3)', '=MROUND(10;0)', '=MROUND(7.5;5)', '=MROUND(1.3;0.2)',
@@ -112,3 +114,7 @@ export const LAYOUTS = [
     { name: 'Two', rows: [[10, '=One.A1*3', '=One.B1&One.C1']] },
   ] },
 ];
+
+FIXTURES.push(...MORE_FIXTURES);
+CASES.push(...MORE_CASES);
+LAYOUTS.push(...MORE_LAYOUTS);

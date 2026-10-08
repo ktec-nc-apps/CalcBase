@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="CalcBase 0.0.1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalcBase の使い方</title>
+<style id="cb-style">body.cb-book{margin:16px;font-family:"Noto Sans JP","Hiragino Sans","Segoe UI",Roboto,sans-serif;color:#111;background:#fff}
+.cb-sheet{margin:0 0 28px;page-break-after:always;break-after:page}
+.cb-sheet:last-child{page-break-after:auto;break-after:auto}
+h2.cb-sheet-name{margin:0 0 8px;font-size:14px;font-weight:600;color:#555}
+.cb-sheet table{border-collapse:collapse;table-layout:fixed;font-size:11pt}
+.cb-sheet td{border:1px solid #d4dae3;padding:0 4px;height:24px;overflow:hidden;white-space:nowrap;text-overflow:clip;vertical-align:bottom;line-height:1.25}
+.cb-sheet[data-grid="0"] td{border-color:transparent}
+.cb-sheet td[data-t="n"]{text-align:right}
+.cb-sheet td[data-t="e"]{color:#c62828;font-weight:600}
+.cb-sheet td a{color:#1d4ed8}
+.cb-sheet td[data-note]{position:relative}
+.cb-sheet td[data-note]::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #d32f2f transparent transparent}
+.cb-area{position:relative;width:max-content}
+.cb-pic{position:absolute;display:block}
+.cb-sheet tr[style*="height:0px"]{display:none}
+@media print{body.cb-book{margin:0}.cb-sheet{margin:0}h2.cb-sheet-name{display:none}.cb-sheet td[data-note]::after{display:none}}</style>
+<style id="cb-page">@page{size:210mm 297mm;margin:15mm 15mm 15mm 15mm}section.cb-sheet:nth-of-type(1){page:cbs0}
+@page cbs0{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"はじめに";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(2){page:cbs1}
+@page cbs1{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"ためしに";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(3){page:cbs2}
+@page cbs2{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"キー操作";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(4){page:cbs3}
+@page cbs3{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"関数";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(5){page:cbs4}
+@page cbs4{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"取り込みと印刷";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(6){page:cbs5}
+@page cbs5{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"AI アシスタント";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}</style>
+</head>
+<body class="cb-book" data-active="0" data-paper="{&quot;size&quot;:&quot;A4&quot;,&quot;orientation&quot;:&quot;portrait&quot;,&quot;margin&quot;:{&quot;top&quot;:15,&quot;bottom&quot;:15,&quot;left&quot;:15,&quot;right&quot;:15},&quot;header&quot;:{&quot;l&quot;:&quot;&quot;,&quot;c&quot;:&quot;&quot;,&quot;r&quot;:&quot;{sheet}&quot;},&quot;footer&quot;:{&quot;l&quot;:&quot;&quot;,&quot;c&quot;:&quot;{page} / {pages}&quot;,&quot;r&quot;:&quot;&quot;},&quot;scale&quot;:&quot;fit&quot;,&quot;wide&quot;:1,&quot;tall&quot;:1,&quot;grid&quot;:false,&quot;headings&quot;:false,&quot;repeat&quot;:0}" data-styles="{&quot;Heading 1&quot;:{&quot;b&quot;:1,&quot;size&quot;:16},&quot;Heading 2&quot;:{&quot;b&quot;:1,&quot;size&quot;:13},&quot;Heading&quot;:{&quot;b&quot;:1,&quot;bb&quot;:&quot;2px solid #333333&quot;},&quot;Total&quot;:{&quot;b&quot;:1,&quot;bt&quot;:&quot;1px solid #333333&quot;,&quot;bb&quot;:&quot;3px double #333333&quot;},&quot;Note&quot;:{&quot;bg&quot;:&quot;#ffffcc&quot;,&quot;color&quot;:&quot;#333333&quot;,&quot;bt&quot;:&quot;1px solid #808080&quot;,&quot;br&quot;:&quot;1px solid #808080&quot;,&quot;bb&quot;:&quot;1px solid #808080&quot;,&quot;bl&quot;:&quot;1px solid #808080&quot;},&quot;Good&quot;:{&quot;bg&quot;:&quot;#ccffcc&quot;,&quot;color&quot;:&quot;#006600&quot;}}">
+<section class="cb-sheet" data-name="はじめに" data-grid="0">
+<h2 class="cb-sheet-name">はじめに</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">CalcBase の使い方</td></tr>
+<tr style="height:43px"><td colspan="2" data-t="s" style="white-space:normal">CalcBase は Nextcloud の中で動く表計算です。ブックは Files に普通の .html ファイルとして保存され、どのブラウザーでも開いて見られます。</td></tr>
+<tr><td colspan="2" data-t="s">式と関数は LibreOffice Calc や Excel と同じ書き方です。Calc と Excel で違うところは、Calc に合わせています。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">画面の見方</td></tr>
+<tr><td data-t="s" style="font-weight:700">左の一覧</td><td data-t="s">ブックとカテゴリ。ブックをカテゴリへドラッグすると移動します。右クリックで名前の変更・共有・削除など。</td></tr>
+<tr><td data-t="s" style="font-weight:700">＋ 新しいブック / ＋CSV</td><td data-t="s">空のブックを作ります。＋CSV は Files の CSV・ODS・XLSX・Markdown の表から作ります。</td></tr>
+<tr><td data-t="s" style="font-weight:700">上のバー</td><td data-t="s">保存・印刷 / PDF・Webプレビュー・用紙設定・HTMLを表示・その他（…）。</td></tr>
+<tr><td data-t="s" style="font-weight:700">道具の段</td><td data-t="s">セルスタイル・フォント・サイズ、太字などの書式、色・罫線・配置・結合、表示形式。</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">左の列</td><td data-t="s" style="white-space:normal">挿入（関数・行と列・画像・リンク・コメント・名前）、取り込む、データ（並べ替え・オートフィルター）、表示の切り替え。</td></tr>
+<tr><td data-t="s" style="font-weight:700">右の帯</td><td data-t="s">AI アシスタントと、シートの縮図を並べたシート一覧バーを開け閉めします。</td></tr>
+<tr><td data-t="s" style="font-weight:700">下の帯</td><td data-t="s">シートの見出し（ダブルクリックで名前の変更）と、選んだセルの合計・平均・個数。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">次のシート</td></tr>
+<tr><td data-t="s" style="font-weight:700">ためしに</td><td data-t="s">数を書き換えると、式の結果がすぐに変わります。</td></tr>
+<tr><td data-t="s" style="font-weight:700">キー操作</td><td data-t="s">Calc と同じキーで操作できます。</td></tr>
+<tr><td data-t="s" style="font-weight:700">関数</td><td data-t="s">分類ごとの関数と、その場で計算している例。</td></tr>
+<tr><td data-t="s" style="font-weight:700">取り込みと印刷</td><td data-t="s">他のアプリからの取り込み、書き出し、印刷、保存と共有。</td></tr>
+<tr><td data-t="s" style="font-weight:700">AI アシスタント</td><td data-t="s">AI に聞く・頼む。</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="ためしに" data-grid="1">
+<h2 class="cb-sheet-name">ためしに</h2>
+<table>
+<colgroup>
+<col style="width:130px">
+<col style="width:80px">
+<col style="width:90px">
+<col style="width:100px">
+</colgroup>
+<tbody>
+<tr><td colspan="4" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">ためしに使ってみましょう</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">品目</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">数量</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">単価</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">金額</td></tr>
+<tr><td data-t="s">りんご</td><td data-t="n" data-v="3">3</td><td data-t="n" data-v="120" data-fmt="¥#,##0">¥120</td><td data-f="=B4*C4" data-t="n" data-v="360" data-fmt="¥#,##0">¥360</td></tr>
+<tr><td data-t="s">なし</td><td data-t="n" data-v="5">5</td><td data-t="n" data-v="80" data-fmt="¥#,##0">¥80</td><td data-f="=B5*C5" data-t="n" data-v="400" data-fmt="¥#,##0">¥400</td></tr>
+<tr><td data-t="s">ぶどう</td><td data-t="n" data-v="2">2</td><td data-t="n" data-v="450" data-fmt="¥#,##0">¥450</td><td data-f="=B6*C6" data-t="n" data-v="900" data-fmt="¥#,##0">¥900</td></tr>
+<tr><td data-t="s" data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">合計</td><td data-f="=SUM(B4:B6)" data-t="n" data-v="10" data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">10</td><td data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333"></td><td data-f="=SUM(D4:D6)" data-t="n" data-v="1660" data-fmt="¥#,##0" data-style="Total" data-note="=SUM(D4:D6) で D4 から D6 を合計しています。" title="=SUM(D4:D6) で D4 から D6 を合計しています。" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">¥1,660</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">数量や単価を書き換えると、金額と合計がすぐに計算し直されます。</td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">Ctrl+` を押すと、式そのものを表示します。もう一度押すと元に戻ります。</td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">赤い角のあるセルにはコメントがあります。マウスを乗せると表示されます。</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="キー操作" data-grid="0">
+<h2 class="cb-sheet-name">キー操作</h2>
+<table>
+<colgroup>
+<col style="width:230px">
+<col style="width:560px">
+</colgroup>
+<tbody>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">キー</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">動作</td></tr>
+<tr><td data-t="s" style="font-weight:700">Enter / Shift+Enter</td><td data-t="s">入力を確定して下（設定により右）へ／戻る</td></tr>
+<tr><td data-t="s" style="font-weight:700">Tab / Shift+Tab</td><td data-t="s">確定して右へ／左へ</td></tr>
+<tr><td data-t="s" style="font-weight:700">F2</td><td data-t="s">セルを編集（カーソルは末尾）</td></tr>
+<tr><td data-t="s" style="font-weight:700">Esc</td><td data-t="s">入力を取り消す</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Enter / Alt+Enter</td><td data-t="s">セル内で改行</td></tr>
+<tr><td data-t="s" style="font-weight:700">F4</td><td data-t="s">カーソル位置の参照の $ を切り替える（A1 → $A$1 → A$1 → $A1）</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Z / Ctrl+Y</td><td data-t="s">元に戻す／やり直す</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+C / Ctrl+X / Ctrl+V</td><td data-t="s">コピー／切り取り／貼り付け（数式の参照は貼り付け位置に合わせて変わります）</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Shift+V</td><td data-t="s">値だけを貼り付け</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+D</td><td data-t="s">下方向へコピー</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+L / Ctrl+E / Ctrl+R</td><td data-t="s">左揃え／中央揃え／右揃え</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+B / Ctrl+I / Ctrl+U</td><td data-t="s">太字／斜体／下線</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+1</td><td data-t="s">セルのプロパティ</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+K</td><td data-t="s">ハイパーリンク</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+; / Ctrl+Shift+;</td><td data-t="s">今日の日付／今の時刻</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Shift+L</td><td data-t="s">オートフィルター</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl++ / Ctrl+-</td><td data-t="s">セルの挿入／セルの削除</td></tr>
+<tr><td data-t="s" style="font-weight:700">Alt+=</td><td data-t="s">オートSUM</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+`</td><td data-t="s">数式の表示と値の表示を切り替える</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+F</td><td data-t="s">検索と置換</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+S</td><td data-t="s">保存</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+A</td><td data-t="s">シート全体を選択</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+矢印</td><td data-t="s">データの範囲の端へ（先に無ければシートの端へ）</td></tr>
+<tr><td data-t="s" style="font-weight:700">End</td><td data-t="s">使っている範囲の最後の列へ</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+*（テンキー）</td><td data-t="s">カーソルのあるデータの範囲を選択</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Home / Ctrl+End</td><td data-t="s">A1 へ／使用中の最後のセルへ</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+PageUp / Ctrl+PageDown</td><td data-t="s">前のシート／次のシート</td></tr>
+<tr><td data-t="s" style="font-weight:700">Delete / Backspace</td><td data-t="s">セルの内容を削除（書式は残す）／削除する物を選ぶ</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s">式を入力している途中にセルをクリック（またはドラッグ）すると、その番地が式に入ります。</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="関数" data-grid="1">
+<h2 class="cb-sheet-name">関数</h2>
+<table>
+<colgroup>
+<col style="width:96px">
+<col style="width:124px">
+<col style="width:430px">
+<col style="width:110px">
+<col style="width:340px">
+</colgroup>
+<tbody>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">分類</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">関数</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">例（入力する式）</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">結果</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">説明</td></tr>
+<tr><td data-t="s">数学</td><td data-t="s" style="font-weight:700">SUM</td><td data-t="s" style="font-family:monospace">=SUM(A27:A32)</td><td data-f="=SUM(A27:A32)" data-t="n" data-v="74">74</td><td data-t="s">A27:A32 の合計</td></tr>
+<tr><td data-t="s">数学</td><td data-t="s" style="font-weight:700">SUMIF</td><td data-t="s" style="font-family:monospace">=SUMIF(B27:B32,&quot;A&quot;,A27:A32)</td><td data-f="=SUMIF(B27:B32,&quot;A&quot;,A27:A32)" data-t="n" data-v="15">15</td><td data-t="s">B 列が A の行だけ合計</td></tr>
+<tr><td data-t="s">数学</td><td data-t="s" style="font-weight:700">ROUND</td><td data-t="s" style="font-family:monospace">=ROUND(PI(),2)</td><td data-f="=ROUND(PI(),2)" data-t="n" data-v="3.14">3.14</td><td data-t="s">小数第 2 位に四捨五入</td></tr>
+<tr><td data-t="s">数学</td><td data-t="s" style="font-weight:700">MOD</td><td data-t="s" style="font-family:monospace">=MOD(17,5)</td><td data-f="=MOD(17,5)" data-t="n" data-v="2">2</td><td data-t="s">17 を 5 で割った余り</td></tr>
+<tr><td data-t="s">統計</td><td data-t="s" style="font-weight:700">AVERAGE</td><td data-t="s" style="font-family:monospace">=AVERAGE(A27:A32)</td><td data-f="=AVERAGE(A27:A32)" data-t="n" data-v="12.333333333333334">12.3333333333333</td><td data-t="s">平均</td></tr>
+<tr><td data-t="s">統計</td><td data-t="s" style="font-weight:700">MAX / MIN</td><td data-t="s" style="font-family:monospace">=MAX(A27:A32)-MIN(A27:A32)</td><td data-f="=MAX(A27:A32)-MIN(A27:A32)" data-t="n" data-v="22">22</td><td data-t="s">最大値と最小値の差</td></tr>
+<tr><td data-t="s">統計</td><td data-t="s" style="font-weight:700">COUNTIF</td><td data-t="s" style="font-family:monospace">=COUNTIF(A27:A32,&quot;&gt;10&quot;)</td><td data-f="=COUNTIF(A27:A32,&quot;&gt;10&quot;)" data-t="n" data-v="3">3</td><td data-t="s">10 より大きい数の個数</td></tr>
+<tr><td data-t="s">統計</td><td data-t="s" style="font-weight:700">LARGE</td><td data-t="s" style="font-family:monospace">=LARGE(A27:A32,2)</td><td data-f="=LARGE(A27:A32,2)" data-t="n" data-v="18">18</td><td data-t="s">2 番目に大きい数</td></tr>
+<tr><td data-t="s">論理</td><td data-t="s" style="font-weight:700">IF</td><td data-t="s" style="font-family:monospace">=IF(A27&gt;10,&quot;多い&quot;,&quot;少ない&quot;)</td><td data-f="=IF(A27&gt;10,&quot;多い&quot;,&quot;少ない&quot;)" data-t="s">多い</td><td data-t="s">条件で答えを変える</td></tr>
+<tr><td data-t="s">論理</td><td data-t="s" style="font-weight:700">IFERROR</td><td data-t="s" style="font-family:monospace">=IFERROR(1/0,&quot;割れません&quot;)</td><td data-f="=IFERROR(1/0,&quot;割れません&quot;)" data-t="s">割れません</td><td data-t="s">エラーの代わりの値</td></tr>
+<tr><td data-t="s">文字列</td><td data-t="s" style="font-weight:700">CONCAT</td><td data-t="s" style="font-family:monospace">=CONCAT(&quot;Calc&quot;,&quot;Base&quot;)</td><td data-f="=CONCAT(&quot;Calc&quot;,&quot;Base&quot;)" data-t="s">CalcBase</td><td data-t="s">文字列をつなぐ</td></tr>
+<tr><td data-t="s">文字列</td><td data-t="s" style="font-weight:700">LEFT</td><td data-t="s" style="font-family:monospace">=LEFT(&quot;CalcBase&quot;,4)</td><td data-f="=LEFT(&quot;CalcBase&quot;,4)" data-t="s">Calc</td><td data-t="s">左から 4 文字</td></tr>
+<tr><td data-t="s">文字列</td><td data-t="s" style="font-weight:700">TEXT</td><td data-t="s" style="font-family:monospace">=TEXT(1234.5,&quot;#,##0.00&quot;)</td><td data-f="=TEXT(1234.5,&quot;#,##0.00&quot;)" data-t="s">1,234.50</td><td data-t="s">数値を書式付きの文字列に</td></tr>
+<tr><td data-t="s">検索/行列</td><td data-t="s" style="font-weight:700">VLOOKUP</td><td data-t="s" style="font-family:monospace">=VLOOKUP(25,A27:B32,2,0)</td><td data-f="=VLOOKUP(25,A27:B32,2,0)" data-t="s">C</td><td data-t="s">25 の行の B 列</td></tr>
+<tr><td data-t="s">検索/行列</td><td data-t="s" style="font-weight:700">INDEX / MATCH</td><td data-t="s" style="font-family:monospace">=INDEX(B27:B32,MATCH(3,A27:A32,0))</td><td data-f="=INDEX(B27:B32,MATCH(3,A27:A32,0))" data-t="s">A</td><td data-t="s">3 のある行の B 列</td></tr>
+<tr><td data-t="s">検索/行列</td><td data-t="s" style="font-weight:700">XLOOKUP</td><td data-t="s" style="font-family:monospace">=XLOOKUP(18,A27:A32,B27:B32)</td><td data-f="=XLOOKUP(18,A27:A32,B27:B32)" data-t="s">B</td><td data-t="s">18 の行の B 列</td></tr>
+<tr><td data-t="s">日付/時刻</td><td data-t="s" style="font-weight:700">DATE</td><td data-t="s" style="font-family:monospace">=DATE(2026,10,5)</td><td data-f="=DATE(2026,10,5)" data-t="n" data-v="46300" data-fmt="yyyy/mm/dd">2026/10/05</td><td data-t="s">年・月・日から日付</td></tr>
+<tr><td data-t="s">日付/時刻</td><td data-t="s" style="font-weight:700">EDATE</td><td data-t="s" style="font-family:monospace">=EDATE(DATE(2026,1,31),1)</td><td data-f="=EDATE(DATE(2026,1,31),1)" data-t="n" data-v="46081" data-fmt="yyyy/mm/dd">2026/02/28</td><td data-t="s">1 か月後（月末は月末）</td></tr>
+<tr><td data-t="s">日付/時刻</td><td data-t="s" style="font-weight:700">DATEDIF</td><td data-t="s" style="font-family:monospace">=DATEDIF(DATE(2026,4,1),DATE(2026,10,5),&quot;m&quot;)</td><td data-f="=DATEDIF(DATE(2026,4,1),DATE(2026,10,5),&quot;m&quot;)" data-t="n" data-v="6">6</td><td data-t="s">経過した月数</td></tr>
+<tr><td data-t="s">日付/時刻</td><td data-t="s" style="font-weight:700">NETWORKDAYS</td><td data-t="s" style="font-family:monospace">=NETWORKDAYS(DATE(2026,10,1),DATE(2026,10,31))</td><td data-f="=NETWORKDAYS(DATE(2026,10,1),DATE(2026,10,31))" data-t="n" data-v="22">22</td><td data-t="s">土日を除いた日数</td></tr>
+<tr><td data-t="s">財務</td><td data-t="s" style="font-weight:700">PMT</td><td data-t="s" style="font-family:monospace">=PMT(0.03/12,36,-1000000)</td><td data-f="=PMT(0.03/12,36,-1000000)" data-t="n" data-v="29081.20963065292" data-fmt="¥#,##0">¥29,081</td><td data-t="s">100 万円を年 3%・36 回で返す毎月の額</td></tr>
+<tr><td data-t="s">情報</td><td data-t="s" style="font-weight:700">ISNUMBER</td><td data-t="s" style="font-family:monospace">=ISNUMBER(A27)</td><td data-f="=ISNUMBER(A27)" data-t="b" data-v="TRUE">TRUE</td><td data-t="s">数値かどうか</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">例が使うデータ</td><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">数</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">記号</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="12">12</td><td data-t="s">A</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="7">7</td><td data-t="s">B</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="25">25</td><td data-t="s">C</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="3">3</td><td data-t="s">A</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="18">18</td><td data-t="s">B</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="9">9</td><td data-t="s">C</td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="取り込みと印刷" data-grid="0">
+<h2 class="cb-sheet-name">取り込みと印刷</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">取り込み・書き出し・印刷</td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">取り込む（左の列）</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">RegiBase</td><td data-t="s" style="white-space:normal">コレクションを選ぶと、1件1行・項目ごとの列のシートになります。日付は日付、数値は数値のまま。秘密の項目は取り込みません。</td></tr>
+<tr><td data-t="s" style="font-weight:700">FormulaBase</td><td data-t="s">式・変数・結果を並べたシートになります。結果は、できる限り計算する数式として入ります。</td></tr>
+<tr><td data-t="s" style="font-weight:700">EditBase</td><td data-t="s">文書の中の表を、1つずつシートにします。表の数式もそのまま入ります。</td></tr>
+<tr><td data-t="s" style="font-weight:700">NetBase・Tables</td><td data-t="s">NetBase が見つけた機器、Tables の表をシートにします。</td></tr>
+<tr><td data-t="s" style="font-weight:700">連絡先・カレンダー</td><td data-t="s">連絡先、指定した期間の予定をシートにします。</td></tr>
+<tr><td data-t="s" style="font-weight:700">Webページの表</td><td data-t="s">アドレスを入れると、ページのすべての表をシートにします。</td></tr>
+<tr><td data-t="s" style="font-weight:700">ファイル</td><td data-t="s">Files の CSV・ODS・XLSX・Markdown の表を取り込みます。</td></tr>
+<tr><td data-t="s" style="font-weight:700">入れ方</td><td data-t="s">「新しいシートとして追加」か「カーソルの位置に入れる」を選べます。どちらも Ctrl+Z 1回で取り消せます。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">書き出し（…）</td></tr>
+<tr><td data-t="s" style="font-weight:700">CSV・ODS・XLSX</td><td data-t="s">ブックの隣に書き出します。数式・値・表示形式・書式・列の幅・結合が残ります。</td></tr>
+<tr><td data-t="s" style="font-weight:700">コピーをダウンロード</td><td data-t="s">ブックの .html ファイルをパソコンに保存します。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">印刷</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">印刷 / PDF</td><td data-t="s" style="white-space:normal">使っている範囲・選択範囲・すべてのシートを印刷します。PDF にするには、ブラウザーの印刷画面で「PDF に保存」を選びます。</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">用紙設定</td><td data-t="s" style="white-space:normal">用紙・向き・余白、ヘッダーとフッター、拡大縮小（ページの幅に合わせる・ページ数に合わせる）。用紙設定はブックに保存されます。</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">ヘッダーとフッター</td><td data-t="s" style="white-space:normal">{page} はページ番号、{pages} は全体のページ数、{sheet} はシート名、{title} はブック名、{date} は印刷した日付です。</td></tr>
+<tr><td data-t="s" style="font-weight:700">ページ区切り</td><td data-t="s">左の列の「表示」で、印刷したときのページの区切り位置を表示できます。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">保存と共有</td></tr>
+<tr><td data-t="s" style="font-weight:700">保存</td><td data-t="s">入力すると自動で保存されます（設定で切り替えられます）。Ctrl+S でもすぐに保存できます。</td></tr>
+<tr><td data-t="s" style="font-weight:700">バージョン</td><td data-t="s">保存のたびに、ブックの隣に以前の内容（#01〜#99）を残せます。…の「バージョン…」から復元できます。</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">共有</td><td data-t="s" style="white-space:normal">ブックやカテゴリを右クリックして「共有…」。このサーバーの他のユーザーと、閲覧のみ・編集可能で共有できます。</td></tr>
+<tr><td data-t="s" style="font-weight:700">ブックのチェック</td><td data-t="s">…の「ブックのチェック」で、エラー値・空のセルを指す数式・文字列の数値・用紙より広い列を探します。</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="AI アシスタント" data-grid="0">
+<h2 class="cb-sheet-name">AI アシスタント</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">AI アシスタント</td></tr>
+<tr><td colspan="2" data-t="s">右の帯の「AI アシスタント」を開くと、CalcBase 専用の AI に質問したり、作業を頼んだりできます（管理者が許可している場合）。</td></tr>
+<tr><td colspan="2" data-t="s">質問と一緒に、開いているシートの使っている範囲と、選んでいる範囲が AI に送られます。</td></tr>
+<tr><td colspan="2" data-t="s">AI がセルに書き込んだ変更は、Ctrl+Z 1回で元に戻せます。</td></tr>
+<tr><td colspan="2" data-t="s">管理者が許可したアプリ（RegiBase など）は、必要なときだけ AI が読みに行きます。AI がアプリの中身を変えることはありません。</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">頼み方の例</td></tr>
+<tr><td data-t="s" style="font-weight:700">計算</td><td data-t="s">「B2:B10 の合計を B11 に入れて」</td></tr>
+<tr><td data-t="s" style="font-weight:700">説明</td><td data-t="s">「D 列の式が何をしているか教えて」</td></tr>
+<tr><td data-t="s" style="font-weight:700">表を作る</td><td data-t="s">「この表の下に平均と最大値の行を追加して」</td></tr>
+<tr><td data-t="s" style="font-weight:700">操作</td><td data-t="s">「売上の多い順に並べ替える方法は？」</td></tr>
+<tr><td data-t="s" style="font-weight:700">セルについて</td><td data-t="s">セルを右クリックして「このセルについて聞く」。</td></tr>
+</tbody>
+</table>
+</section>
+</body>
+</html>

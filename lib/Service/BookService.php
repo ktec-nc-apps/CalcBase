@@ -102,6 +102,120 @@ class BookService {
 	}
 
 	/**
+	 * A folder of the user's Files by its path from the top of them ("CalcBase/Work"),
+	 * as it is: nothing is made. Where it is not there any more, or a file stands
+	 * in its place, the save folder is the answer. The folder a book is in is
+	 * named this way (what the book's path is, less its name), so that what is
+	 * made from the book is put beside it.
+	 */
+	public function homeFolderAt(string $userId, string $path): Folder {
+		$node = $this->rootFolder->getUserFolder($userId);
+		foreach (explode('/', str_replace('\\', '/', $path)) as $part) {
+			if ($part === '' || $part === '.') {
+				continue;
+			}
+			if ($part === '..' || str_contains($part, "\0")) {
+				throw new \InvalidArgumentException('that is not a folder name');
+			}
+			try {
+				$node = $node instanceof Folder ? $node->get($part) : null;
+			} catch (NotFoundException) {
+				$node = null;
+			}
+			if (!($node instanceof Folder)) {
+				return $this->folder($userId);
+			}
+		}
+		return $node instanceof Folder ? $node : $this->folder($userId);
+	}
+
+	/**
+	 * The categories the books are kept in -- the folders inside the save folder,
+	 * in order, including the empty ones (a folder made and not yet written in is
+	 * still a place to put something) -- each with the ids of the books in it.
+	 *
+	 * @return list<array{path: string, name: string, id: int, books: list<int>}>
+	 */
+	public function folders(string $userId): array {
+		$out = [];
+		$this->gatherFolders($this->folder($userId), '', $out);
+		usort($out, static fn (array $a, array $b): int => strnatcasecmp($a['path'], $b['path']));
+		return $out;
+	}
+
+	/** @param list<array<string, mixed>> $out */
+	private function gatherFolders(Folder $folder, string $path, array &$out, int $depth = 0): void {
+		foreach ($folder->getDirectoryListing() as $node) {
+			if (!($node instanceof Folder)) {
+				continue;
+			}
+			$here = $path === '' ? $node->getName() : $path . '/' . $node->getName();
+			$books = [];
+			foreach ($node->getDirectoryListing() as $child) {
+				if ($child instanceof File && $this->isHtml($child->getName())) {
+					$books[] = $child->getId();
+				}
+			}
+			$out[] = ['path' => $here, 'name' => $node->getName(), 'id' => $node->getId(), 'books' => $books];
+			if ($depth < 4) {
+				$this->gatherFolders($node, $here, $out, $depth + 1);
+			}
+		}
+	}
+
+	/** Make a category to keep books in, inside the save folder. */
+	public function makeFolder(string $userId, string $path): string {
+		$path = $this->cleanFolder($path);
+		if ($path === '') {
+			throw new \InvalidArgumentException('a folder needs a name');
+		}
+		$this->folderAt($userId, $path);
+		return $path;
+	}
+
+	/**
+	 * The id of a category, so that it can be shared like anything else. The save
+	 * folder itself is not one: sharing that would hand over every book there is,
+	 * which is not what anyone means by sharing a category.
+	 */
+	public function folderId(string $userId, string $path): int {
+		$path = $this->cleanFolder($path);
+		if ($path === '') {
+			throw new \InvalidArgumentException('the whole of your own folder is not a category');
+		}
+		return $this->categoryAt($userId, $path)->getId();
+	}
+
+	/**
+	 * Delete a category -- an empty one only (EditBase, owner 2026-09-29): a
+	 * category with anything in it is refused, so no book goes with it. The folder
+	 * goes to Nextcloud's trash like any deleted folder.
+	 */
+	public function deleteFolder(string $userId, string $path): void {
+		$path = $this->cleanFolder($path);
+		if ($path === '') {
+			throw new \InvalidArgumentException('the whole of your own folder is not a category');
+		}
+		$node = $this->categoryAt($userId, $path);
+		if (count($node->getDirectoryListing()) > 0) {
+			throw new \InvalidArgumentException('not empty');
+		}
+		$node->delete();
+	}
+
+	/** A category that is there, by its cleaned path, one folder at a time. */
+	private function categoryAt(string $userId, string $path): Folder {
+		$node = $this->folder($userId);
+		foreach (explode('/', $path) as $part) {
+			$node = $node->get($part);
+			if (!($node instanceof Folder)) {
+				throw new \InvalidArgumentException('that is not a category');
+			}
+		}
+		return $node;
+	}
+
+	/**
 	 * Refuse a folder path that runs into a file: at the path itself, or at any
 	 * folder on the way to it.
 	 */
@@ -243,6 +357,14 @@ class BookService {
 				}
 				$seen[$node->getId()] = true;
 				$item = $this->describe($node, false, '');
+				// A book shared on its own keeps the number of the folder it is in on
+				// its owner's side (as EditBase): the list files it under "Shared with
+				// me" by it, and it is not a folder this user can see.
+				try {
+					$item['folderId'] = $share->getNode()->getParent()->getId();
+				} catch (\Throwable) {
+					// kept as this user sees it
+				}
 				$item['owner'] = $owner;
 				$item['shared'] = true;
 				$out[] = $item;
@@ -274,7 +396,34 @@ class BookService {
 
 	/** @return array<string, mixed> */
 	public function get(string $userId, int $id): array {
-		return $this->describe($this->file($userId, $id), true);
+		$file = $this->file($userId, $id);
+		$this->withinSize($userId, $file->getSize());
+		return $this->describe($file, true);
+	}
+
+	/**
+	 * What this writer's books may hold, from the setting "how big a book may be"
+	 * (Model::CELL_LIMITS): cells, rows of a sheet, bytes of a file (0: no limit).
+	 * "No limit" leaves only the server's own ceilings for what passes through it.
+	 *
+	 * @return array{cells: int, rows: int, bytes: int}
+	 */
+	public function limits(string $userId): array {
+		$cells = (int)$this->config->getUserValue($userId, Application::APP_ID, 'cellLimit', (string)Model::DEFAULT_CELL_LIMIT);
+		if (!in_array($cells, Model::CELL_LIMITS, true)) {
+			$cells = Model::DEFAULT_CELL_LIMIT;
+		}
+		return $cells === 0
+			? ['cells' => Model::MAX_CELLS, 'rows' => Cells::MAX_ROWS, 'bytes' => 0]
+			: ['cells' => $cells, 'rows' => Model::MAX_ROWS, 'bytes' => Model::MAX_FILE_BYTES];
+	}
+
+	/** A book larger than its writer's limit is neither read nor written. */
+	private function withinSize(string $userId, int|float|false $bytes): void {
+		$max = $this->limits($userId)['bytes'];
+		if ($max > 0 && $bytes !== false && $bytes > $max) {
+			throw new \InvalidArgumentException('file is larger than ' . (int)($max / 1024 / 1024) . ' MB');
+		}
 	}
 
 	/**
@@ -283,8 +432,27 @@ class BookService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function create(string $userId, string $name, string $content, string $path = ''): array {
-		$folder = $this->folderAt($userId, $path);
+	public function create(string $userId, string $name, string $content, string $path = '', int $folderId = 0): array {
+		$this->withinSize($userId, strlen($content));
+		$where = '';
+		if ($folderId > 0) {
+			// A category somebody else shared: it is not inside this user's own save
+			// folder, so it is found by its id rather than by a path from there.
+			$folder = null;
+			foreach ($this->rootFolder->getUserFolder($userId)->getById($folderId) as $node) {
+				if ($node instanceof Folder) {
+					$folder = $node;
+					break;
+				}
+			}
+			if ($folder === null) {
+				throw new NotFoundException('that category is not there');
+			}
+			$where = $folder->getName();
+		} else {
+			$folder = $this->folderAt($userId, $path);
+			$where = $this->cleanFolder($path);
+		}
 		if (!$folder->isCreatable()) {
 			throw new NotPermittedException('that folder is read only');
 		}
@@ -293,7 +461,7 @@ class BookService {
 			$content = self::blankBook($stem);
 		}
 		$file = $folder->newFile(FileNames::free($folder, $stem, self::EXT), $content);
-		return $this->describe($file, false, $this->cleanFolder($path));
+		return $this->describe($file, false, $where);
 	}
 
 	/**
@@ -335,6 +503,7 @@ class BookService {
 	 * @return array<string, mixed>
 	 */
 	public function save(string $userId, int $id, string $content, string $etag = '', bool $manual = false): array {
+		$this->withinSize($userId, strlen($content));
 		// The check and the write are one step (review S4). A second save of the
 		// same book waits for the first to finish, then looks again at what is
 		// there: two writers who both started from the same version used to both

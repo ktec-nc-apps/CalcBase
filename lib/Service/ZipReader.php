@@ -16,7 +16,11 @@ namespace OCA\CalcBase\Service;
  * server running out of memory.
  */
 final class ZipReader {
-	/** The most one entry may unpack to. */
+	/**
+	 * The most one entry may unpack to. The sentences that say so are written out
+	 * with the numbers in them (32 MB, 96 MB), so that the screen can find them
+	 * in its translations: change both together.
+	 */
 	public const MAX_ENTRY_BYTES = 32 * 1024 * 1024;
 	/** The most the whole file may unpack to. */
 	public const MAX_TOTAL_BYTES = 96 * 1024 * 1024;
@@ -53,12 +57,12 @@ final class ZipReader {
 			$size = (int)$stat['size'];
 			if ($size > self::MAX_ENTRY_BYTES) {
 				$this->close();
-				throw new \InvalidArgumentException('a part of that file is larger than ' . (int)(self::MAX_ENTRY_BYTES / 1024 / 1024) . ' MB when unpacked');
+				throw new \InvalidArgumentException('a part of that file is larger than 32 MB when unpacked');
 			}
 			$total += $size;
 			if ($total > self::MAX_TOTAL_BYTES) {
 				$this->close();
-				throw new \InvalidArgumentException('that file is larger than ' . (int)(self::MAX_TOTAL_BYTES / 1024 / 1024) . ' MB when unpacked');
+				throw new \InvalidArgumentException('that file is larger than 96 MB when unpacked');
 			}
 			$this->sizes[(string)$stat['name']] = $size;
 		}

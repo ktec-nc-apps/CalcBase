@@ -32,6 +32,16 @@ final class OdsWriter {
 		foreach ($this->model['sheets'] as $sheet) {
 			$tables .= $this->table($sheet);
 		}
+		// The book's settings, said: a file without them is case-sensitive and reads regular expressions in
+		// Calc (ODF's defaults), and LibreOffice opened CalcBase's ODS so -- COUNTIF(…;"a*") found nothing.
+		// As Calc writes a new document's: wildcards; case-sensitive is the default and not written.
+		$calc = $this->model['calc'] ?? [];
+		$settings = '<table:calculation-settings'
+			. (($calc['caseSensitive'] ?? true) === false ? ' table:case-sensitive="false"' : '')
+			. ' table:automatic-find-labels="false"'
+			. (($calc['regex'] ?? false) === true ? ' table:use-regular-expressions="true" table:use-wildcards="false"' : ' table:use-regular-expressions="false" table:use-wildcards="true"')
+			. '/>';
+		$tables = $settings . $tables . $this->namedExpressions($this->model['names'] ?? []);
 		$content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
 			. '<office:document-content ' . self::NS . '>'
 			. $this->fontDecls()
@@ -77,8 +87,8 @@ final class OdsWriter {
 			}
 		};
 		for ($c = 0; $c < $cols; $c++) {
-			$px = $sheet['cols'][Cells::colName($c)] ?? null;
-			$st = $px === null ? '' : $this->colStyle($px);
+			// A column the book has no width for is as wide as the screen shows it, not Calc's 2.258 cm.
+			$st = $this->colStyle((int)($sheet['cols'][Cells::colName($c)] ?? Model::DEFAULT_COL_PX));
 			if ($st === $run) {
 				$runN++;
 			} else {
@@ -109,7 +119,34 @@ final class OdsWriter {
 			}
 			$out .= self::emptyRun($empty) . '</table:table-row>';
 		}
-		return $out . '</table:table>';
+		return $out . $this->namedExpressions($sheet['names'] ?? []) . '</table:table>';
+	}
+
+	/**
+	 * Defined names as Calc writes them: a reference as a named range ($Sheet1.$A$1:.$B$5), anything
+	 * else as a named expression; the base cell is A1 of the first sheet (the book keeps a relative
+	 * reference relative to A1). '' when there are none.
+	 *
+	 * @param array<string, string> $names
+	 */
+	private function namedExpressions(array $names): string {
+		if ($names === []) {
+			return '';
+		}
+		$esc = self::esc(...);
+		$first = $this->model['sheets'][0]['name'] ?? 'Sheet1';
+		$base = '$' . (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $first) ? $first : "'" . str_replace("'", "''", $first) . "'") . '.$A$1';
+		$out = '<table:named-expressions>';
+		foreach ($names as $name => $def) {
+			$of = FormulaSyntax::toOds('=' . $def);
+			// a single reference with its sheet: of:=[$Sheet1.$A$1:.$B$5]
+			if (preg_match('/^of:=\[([^\[\]]+\.[^\[\]]+)\]$/', $of, $m) && !str_starts_with($m[1], '.')) {
+				$out .= '<table:named-range table:name="' . $esc((string)$name) . '" table:base-cell-address="' . $esc($base) . '" table:cell-range-address="' . $esc($m[1]) . '"/>';
+			} else {
+				$out .= '<table:named-expression table:name="' . $esc((string)$name) . '" table:base-cell-address="' . $esc($base) . '" table:expression="' . $esc($of) . '"/>';
+			}
+		}
+		return $out . '</table:named-expressions>';
 	}
 
 	private static function emptyRun(int $n): string {
@@ -125,6 +162,10 @@ final class OdsWriter {
 		}
 		if (isset($cell['f'])) {
 			$attrs .= ' table:formula="' . $esc(FormulaSyntax::toOds($cell['f'])) . '"';
+			// an array formula: the range it fills, from this cell (Calc's number-matrix-*-spanned)
+			if (isset($cell['a']) && ($box = Cells::parseRange($cell['a'])) !== null) {
+				$attrs .= ' table:number-matrix-columns-spanned="' . ($box[3] - $box[1] + 1) . '" table:number-matrix-rows-spanned="' . ($box[2] - $box[0] + 1) . '"';
+			}
 		}
 		$fmt = $cell['fmt'] ?? '';
 		$t = $cell['t'] ?? null;
@@ -297,7 +338,7 @@ final class OdsWriter {
 				$out .= '<style:table-cell-properties' . $cellProps . '/>';
 			}
 			if (isset($s['ha'])) {
-				$out .= '<style:paragraph-properties fo:text-align="' . ($s['ha'] === 'left' ? 'start' : ($s['ha'] === 'right' ? 'end' : 'center')) . '"/>';
+				$out .= '<style:paragraph-properties fo:text-align="' . match ($s['ha']) { 'left' => 'start', 'right' => 'end', 'justify' => 'justify', default => 'center' } . '"/>';
 			}
 			$text = '';
 			if (!empty($s['b'])) {
@@ -345,7 +386,10 @@ final class OdsWriter {
 		return '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
 			. '<office:document-styles ' . self::NS . '>'
 			. $this->fontDecls()
-			. '<office:styles><style:default-style style:family="table-cell"><style:paragraph-properties style:tab-stop-distance="1.25cm"/><style:text-properties fo:font-size="10pt"/></style:default-style>'
+			// a book that limits General to so many decimals says so as Calc does (the default cell style's decimal-places)
+			. '<office:styles><style:default-style style:family="table-cell">'
+			. (isset($this->model['calc']['decimals']) ? '<style:table-cell-properties style:decimal-places="' . (int)$this->model['calc']['decimals'] . '"/>' : '')
+			. '<style:paragraph-properties style:tab-stop-distance="1.25cm"/><style:text-properties fo:font-size="10pt"/></style:default-style>'
 			. '<style:style style:name="Default" style:family="table-cell"/></office:styles>'
 			. '<office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties style:writing-mode="lr-tb"/></style:page-layout></office:automatic-styles>'
 			. '<office:master-styles><style:master-page style:name="Default" style:page-layout-name="pm1"/></office:master-styles>'

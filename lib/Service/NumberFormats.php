@@ -19,6 +19,7 @@ final class NumberFormats {
 	private const NS_NUMBER = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
 	private const NS_STYLE = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
 	private const NS_FO = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+	private const NS_LOEXT = 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0';
 
 	/** The format codes Excel keeps under a number, which an XLSX file names by id alone. */
 	public const XLSX_BUILTIN = [
@@ -75,10 +76,9 @@ final class NumberFormats {
 		if ($kind === 'boolean-style') {
 			return 'General';
 		}
-		if ($kind === 'text-style') {
-			return '@';
-		}
-		$out = '';
+		$isDate = $kind === 'date-style' || $kind === 'time-style';
+		/** @var list<array{0: string, 1: string}> $parts [what it is (y, mon, d, or ''), its code] */
+		$parts = [];
 		$colour = '';
 		foreach ($style->childNodes as $node) {
 			if (!($node instanceof \DOMElement)) {
@@ -88,49 +88,51 @@ final class NumberFormats {
 			$long = $node->getAttributeNS(self::NS_NUMBER, 'style') === 'long';
 			switch ($ln) {
 				case 'text':
-					$out .= self::literal($node->textContent);
+					$parts[] = ['', self::literal($node->textContent, $isDate)];
+					break;
+				case 'text-content':
+					$parts[] = ['', '@'];
 					break;
 				case 'number':
-					$out .= self::numberPart($node);
+					$parts[] = ['', self::numberPart($node)];
 					break;
 				case 'scientific-number':
-					$dec = (int)$node->getAttributeNS(self::NS_NUMBER, 'decimal-places');
-					$exp = max(1, (int)($node->getAttributeNS(self::NS_NUMBER, 'min-exponent-digits') ?: 2));
-					$out .= '0' . ($dec > 0 ? '.' . str_repeat('0', $dec) : '') . 'E+' . str_repeat('0', $exp);
+					$parts[] = ['', self::scientificPart($node)];
 					break;
 				case 'fraction':
-					return 'General';
+					$parts[] = ['', self::fractionPart($node)];
+					break;
 				case 'currency-symbol':
-					$out .= self::literal($node->textContent);
+					$parts[] = ['', self::literal($node->textContent, false)];
 					break;
 				case 'year':
-					$out .= $node->getAttributeNS(self::NS_NUMBER, 'calendar') === 'gengou' ? ($long ? 'ee' : 'e') : ($long ? 'yyyy' : 'yy');
+					$parts[] = ['y', $node->getAttributeNS(self::NS_NUMBER, 'calendar') === 'gengou' ? ($long ? 'ee' : 'e') : ($long ? 'yyyy' : 'yy')];
 					break;
 				case 'era':
-					$out .= $long ? 'ggg' : 'g';
+					$parts[] = ['', $long ? 'ggg' : 'g'];
 					break;
 				case 'month':
 					$textual = $node->getAttributeNS(self::NS_NUMBER, 'textual') === 'true';
-					$out .= $textual ? ($long ? 'mmmm' : 'mmm') : ($long ? 'mm' : 'm');
+					$parts[] = ['mon', $textual ? ($long ? 'mmmm' : 'mmm') : ($long ? 'mm' : 'm')];
 					break;
 				case 'day':
-					$out .= $long ? 'dd' : 'd';
+					$parts[] = ['d', $long ? 'dd' : 'd'];
 					break;
 				case 'day-of-week':
-					$out .= $long ? 'dddd' : 'ddd';
+					$parts[] = ['', $long ? 'dddd' : 'ddd'];
 					break;
 				case 'hours':
-					$out .= ($style->getAttributeNS(self::NS_NUMBER, 'truncate-on-overflow') === 'false' ? '[h]' : ($long ? 'hh' : 'h'));
+					$parts[] = ['', $style->getAttributeNS(self::NS_NUMBER, 'truncate-on-overflow') === 'false' ? '[h]' : ($long ? 'hh' : 'h')];
 					break;
 				case 'minutes':
-					$out .= $long ? 'mm' : 'm';
+					$parts[] = ['', $long ? 'mm' : 'm'];
 					break;
 				case 'seconds':
 					$dec = (int)$node->getAttributeNS(self::NS_NUMBER, 'decimal-places');
-					$out .= ($long ? 'ss' : 's') . ($dec > 0 ? '.' . str_repeat('0', $dec) : '');
+					$parts[] = ['', ($long ? 'ss' : 's') . ($dec > 0 ? '.' . str_repeat('0', $dec) : '')];
 					break;
 				case 'am-pm':
-					$out .= 'AM/PM';
+					$parts[] = ['', 'AM/PM'];
 					break;
 				case 'text-properties':
 					$c = strtolower($node->getAttributeNS(self::NS_FO, 'color'));
@@ -142,10 +144,39 @@ final class NumberFormats {
 					// quarter, week-of-year, embedded-text, map, fill-character: not kept
 			}
 		}
+		// A date style "in the order of the locale" (number:automatic-order) is shown
+		// by Calc with its year, month and day in the order of the language it runs
+		// in, whatever order the file lists them in: year, month, day in Japanese
+		// (lo_date-time-functions.ods: month/day/year written, 14/11/01 shown).
+		if ($kind === 'date-style' && $style->getAttributeNS(self::NS_NUMBER, 'automatic-order') === 'true') {
+			$slots = [];
+			$byKind = [];
+			foreach ($parts as $i => [$what, $code]) {
+				if ($what !== '') {
+					$slots[] = $i;
+					$byKind[$what] = $code;
+				}
+			}
+			$order = array_values(array_filter(['y', 'mon', 'd'], static fn ($k) => isset($byKind[$k])));
+			if (count($order) === count($slots)) {
+				foreach ($slots as $n => $i) {
+					$parts[$i] = [$order[$n], $byKind[$order[$n]]];
+				}
+			}
+		}
+		$out = implode('', array_column($parts, 1));
+		if ($kind === 'text-style' && !str_contains($out, '@')) {
+			$out .= '@';
+		}
 		return $out === '' ? '' : $colour . $out;
 	}
 
 	private static function numberPart(\DOMElement $n): string {
+		// No count of decimals at all is Calc's "General" (Standard): as many as
+		// the number needs. Calc writes General so; read as "0" it rounded 3.14159 to 3.
+		if (!$n->hasAttributeNS(self::NS_NUMBER, 'decimal-places') && $n->getAttributeNS(self::NS_NUMBER, 'grouping') !== 'true') {
+			return 'General';
+		}
 		$dec = (int)$n->getAttributeNS(self::NS_NUMBER, 'decimal-places');
 		$minDec = $n->hasAttributeNS(self::NS_NUMBER, 'min-decimal-places') ? (int)$n->getAttributeNS(self::NS_NUMBER, 'min-decimal-places') : $dec;
 		$int = max(0, (int)$n->getAttributeNS(self::NS_NUMBER, 'min-integer-digits'));
@@ -154,16 +185,61 @@ final class NumberFormats {
 		if ($grouping && $int === 0) {
 			$ipart = '#,###';
 		}
-		$fpart = $dec > 0 ? '.' . str_repeat('0', $minDec) . str_repeat('#', $dec - $minDec) : '';
+		// Decimals that may be left out are # -- or ?, a space each, where Calc
+		// writes the space as their replacement (0.??? → decimal-replacement=" ").
+		$optional = trim($n->getAttributeNS(self::NS_NUMBER, 'decimal-replacement')) === '' && $n->hasAttributeNS(self::NS_NUMBER, 'decimal-replacement') ? '?' : '#';
+		$fpart = $dec > 0 ? '.' . str_repeat('0', min($minDec, $dec)) . str_repeat($optional, max(0, $dec - $minDec)) : '';
 		return $ipart . $fpart;
 	}
 
-	/** A literal inside a code: letters that could be read as a format are quoted. */
-	private static function literal(string $text): string {
+	/**
+	 * 0.00E+00, and the engineering ##0.0#E-0 (exponent in steps of three, the
+	 * sign only when it is negative) as Calc writes them.
+	 */
+	private static function scientificPart(\DOMElement $n): string {
+		$dec = (int)$n->getAttributeNS(self::NS_NUMBER, 'decimal-places');
+		$minDec = $n->hasAttributeNS(self::NS_NUMBER, 'min-decimal-places') ? (int)$n->getAttributeNS(self::NS_NUMBER, 'min-decimal-places') : $dec;
+		$int = max(1, (int)($n->getAttributeNS(self::NS_NUMBER, 'min-integer-digits') ?: 1));
+		$interval = (int)($n->getAttributeNS(self::NS_NUMBER, 'exponent-interval') ?: $n->getAttributeNS(self::NS_LOEXT, 'exponent-interval') ?: 1);
+		$exp = max(1, (int)($n->getAttributeNS(self::NS_NUMBER, 'min-exponent-digits') ?: 2));
+		$forced = ($n->getAttributeNS(self::NS_NUMBER, 'forced-exponent-sign') ?: $n->getAttributeNS(self::NS_LOEXT, 'forced-exponent-sign')) !== 'false';
+		$ipart = str_repeat('#', max(0, $interval - $int)) . str_repeat('0', $int);
+		$fpart = $dec > 0 ? '.' . str_repeat('0', min($minDec, $dec)) . str_repeat('#', max(0, $dec - $minDec)) : '';
+		return $ipart . $fpart . 'E' . ($forced ? '+' : '-') . str_repeat('0', $exp);
+	}
+
+	/** # ??/?? and its kin: an integer part or none, the numerator's and the denominator's digits, or a fixed denominator. */
+	private static function fractionPart(\DOMElement $n): string {
+		$ipart = '';
+		if ($n->hasAttributeNS(self::NS_NUMBER, 'min-integer-digits')) {
+			$int = (int)$n->getAttributeNS(self::NS_NUMBER, 'min-integer-digits');
+			$ipart = ($int > 0 ? str_repeat('0', $int) : '#') . ' ';
+		}
+		$num = max(1, (int)$n->getAttributeNS(self::NS_NUMBER, 'min-numerator-digits'), (int)$n->getAttributeNS(self::NS_LOEXT, 'max-numerator-digits'));
+		$fixed = (int)$n->getAttributeNS(self::NS_NUMBER, 'denominator-value');
+		if ($fixed > 0) {
+			$den = (string)$fixed;
+		} else {
+			$maxValue = $n->getAttributeNS(self::NS_NUMBER, 'max-denominator-value');
+			$den = str_repeat('?', max(1, (int)$n->getAttributeNS(self::NS_NUMBER, 'min-denominator-digits'), (int)$n->getAttributeNS(self::NS_LOEXT, 'max-denominator-digits'), ctype_digit($maxValue) ? strlen($maxValue) : 0));
+		}
+		return $ipart . str_repeat('?', $num) . '/' . $den;
+	}
+
+	/**
+	 * A literal inside a code. In a date, the separators people type (/ - : . ,
+	 * spaces, Japanese) stay as they are; in a number, / is a fraction and most
+	 * letters mean something, so anything but spaces, signs, brackets and
+	 * currency symbols is quoted, as Calc quotes it ("/ "#,##0.00).
+	 */
+	private static function literal(string $text, bool $inDate = true): string {
 		if ($text === '') {
 			return '';
 		}
-		if (preg_match('/^[\s\/\-:.,%¥$€£()\x{FF04}\x{FFE5}\x{20AC}\x{00A3}\x{3000}-\x{30FF}\x{4E00}-\x{9FFF}]+$/u', $text)) {
+		$plain = $inDate
+			? '/^[\s\/\-:.,%¥$€£()\x{FF04}\x{FFE5}\x{20AC}\x{00A3}\x{3000}-\x{30FF}\x{4E00}-\x{9FFF}]+$/u'
+			: '/^[\s\-()%¥$€£\x{FF04}\x{FFE5}\x{20AC}\x{00A3}]+$/u';
+		if (preg_match($plain, $text)) {
 			return $text;
 		}
 		return '"' . str_replace('"', '', $text) . '"';
@@ -181,23 +257,26 @@ final class NumberFormats {
 		$neg = $sections[1] ?? null;
 		$red = $neg !== null && str_contains($neg, '[Red]');
 		$neg = $neg === null ? null : str_replace('[Red]', '', $neg);
-		if ($pos === '@') {
-			return '<number:text-style style:name="' . $name . '"><number:text-content/></number:text-style>';
+		$esc = static fn (string $s): string => htmlspecialchars($s, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+		$bare = preg_replace('/"[^"]*"/', '', $pos) ?? '';
+		// Text: @ with what is written around it ("/"@ shows ">" as "/>").
+		if (str_contains($bare, '@')) {
+			return '<number:text-style style:name="' . $name . '">' . self::odsTextBody($pos, $esc) . '</number:text-style>';
 		}
 		if ($pos === 'General' || $pos === '') {
 			return null;
 		}
-		$esc = static fn (string $s): string => htmlspecialchars($s, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-		// A date or time: any of the date letters outside quotes.
-		if (preg_match('/(?<!\[)(?:y|d|h|s|AM\/PM|g|e|m(?!\/))/i', preg_replace('/"[^"]*"/', '', $pos) ?? '')
-			&& !preg_match('/[0#]/', preg_replace('/"[^"]*"/', '', $pos) ?? '')) {
+		// A date or time: any of the date letters outside quotes (General, Calc's
+		// "as many decimals as it needs", is a number with words around it).
+		if (!str_contains($bare, 'General') && preg_match('/(?<!\[)(?:y|d|h|s|AM\/PM|g|e|m(?!\/))/i', $bare)
+			&& !preg_match('/[0#?]/', preg_replace('/s\.0+/i', 's', $bare) ?? $bare)) {
 			return self::odsDateStyle($pos, $name, $esc);
 		}
 		$body = self::odsNumberBody($pos, $esc);
 		if ($body === null) {
 			return null;
 		}
-		$kind = str_contains($pos, '%') ? 'percentage-style' : (preg_match('/[¥$€£\x{FFE5}]/u', $pos) ? 'currency-style' : 'number-style');
+		$kind = str_contains($bare, '%') ? 'percentage-style' : (preg_match('/[¥$€£\x{FFE5}]/u', $bare) ? 'currency-style' : 'number-style');
 		if ($neg === null) {
 			return '<number:' . $kind . ' style:name="' . $name . '">' . $body . '</number:' . $kind . '>';
 		}
@@ -205,7 +284,9 @@ final class NumberFormats {
 		if ($negBody === null) {
 			return '<number:' . $kind . ' style:name="' . $name . '">' . $body . '</number:' . $kind . '>';
 		}
-		// Two styles: the positive one (named P0) that the negative one maps to.
+		// Two styles: the positive one (named P0) that the negative one maps to. The
+		// negative one shows the number without its sign, as Calc does: the minus
+		// is the "-" written in the section, and must be written out as text.
 		return '<number:' . $kind . ' style:name="' . $name . 'P0">' . $body . '</number:' . $kind . '>'
 			. '<number:' . $kind . ' style:name="' . $name . '">'
 			. ($red ? '<style:text-properties fo:color="#ff0000"/>' : '')
@@ -234,39 +315,99 @@ final class NumberFormats {
 		return $out;
 	}
 
-	/** The number:* elements of a numeric code (text before, number, text after); null when unreadable. */
+	/**
+	 * A code taken apart into its quoted texts and the rest: the rest with each
+	 * quoted text replaced by \x01, as many \x03 as its number and one, and \x02
+	 * (no digit in it, for a digit would be taken for part of the number).
+	 *
+	 * @return array{0: string, 1: list<string>}
+	 */
+	private static function protect(string $code): array {
+		$texts = [];
+		$out = preg_replace_callback('/"([^"]*)"|\\\\(.)/u', static function (array $m) use (&$texts): string {
+			$texts[] = $m[1] !== '' ? $m[1] : ($m[2] ?? '');
+			return "\x01" . str_repeat("\x03", count($texts)) . "\x02";
+		}, $code) ?? $code;
+		return [$out, $texts];
+	}
+
+	/** Text around a number, as number:text and number:currency-symbol elements; quoted text as it was written. */
+	private static function odsTextRun(string $run, array $texts, callable $esc): string {
+		$out = '';
+		$text = '';
+		$flush = static function () use (&$out, &$text, $esc): void {
+			if ($text !== '') {
+				$out .= '<number:text>' . $esc($text) . '</number:text>';
+				$text = '';
+			}
+		};
+		foreach (preg_split('/(\x01\x03+\x02|[¥$€£\x{FFE5}])/u', $run, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [] as $piece) {
+			if (preg_match('/^\x01(\x03+)\x02$/', $piece, $m)) {
+				$text .= $texts[strlen($m[1]) - 1];
+			} elseif (preg_match('/^[¥$€£\x{FFE5}]$/u', $piece)) {
+				$flush();
+				$out .= '<number:currency-symbol>' . $esc($piece) . '</number:currency-symbol>';
+			} else {
+				$text .= $piece;
+			}
+		}
+		$flush();
+		return $out;
+	}
+
+	/** The body of a text style: what is written before and after @. */
+	private static function odsTextBody(string $code, callable $esc): string {
+		[$plain, $texts] = self::protect(str_replace('[Red]', '', $code));
+		$at = strpos($plain, '@');
+		return self::odsTextRun(substr($plain, 0, (int)$at), $texts, $esc) . '<number:text-content/>' . self::odsTextRun(substr($plain, (int)$at + 1), $texts, $esc);
+	}
+
+	/**
+	 * The number:* elements of a numeric code -- the text before, the number
+	 * (plain, scientific or a fraction), the text after; null when there is no
+	 * number in it.
+	 */
 	private static function odsNumberBody(string $code, callable $esc): ?string {
-		if (!preg_match('/^(.*?)(#,##0(?:\.0*#*)?|#,###(?:\.0*#*)?|0+(?:\.0*#*)?|#(?:\.0*#*)?|0(?:\.0+)?E\+0+)(.*)$/su', $code, $m)) {
+		[$plain, $texts] = self::protect(preg_replace('/\[[^\]]*\]/', '', $code) ?? $code);
+		$core = '/(?<gen>General)|(?<frac>(?:[#0?,]+ +)?[#0?]+\/(?:[#0?]+|[1-9]\d*))|(?<sci>[#0,]*[0#](?:\.[0#]*)?[Ee][+-]0+)|(?<num>[#0?,]*[0#?](?:\.[0#?]*)?|\.[0#?]+)/';
+		if (!preg_match($core, $plain, $m, PREG_OFFSET_CAPTURE | PREG_UNMATCHED_AS_NULL)) {
 			return null;
 		}
-		[, $before, $num, $after] = $m;
-		$out = '';
-		$unquote = static fn (string $s): string => str_replace('"', '', $s);
-		$sym = static function (string $s) use ($esc): string {
-			return preg_match('/^[¥$€£\x{FFE5}]+$/u', $s) ? '<number:currency-symbol>' . $esc($s) . '</number:currency-symbol>' : ($s === '' ? '' : '<number:text>' . $esc($s) . '</number:text>');
-		};
-		$before = $unquote($before);
-		$after = $unquote($after);
-		$percent = str_contains($after, '%');
-		if ($before !== '') {
-			$out .= $sym(ltrim($before, '-'));
-		}
-		if (str_contains($num, 'E')) {
-			$dec = strlen(explode('.', explode('E', $num)[0])[1] ?? '');
-			$exp = strlen(explode('+', $num)[1] ?? '00');
-			$out .= '<number:scientific-number number:decimal-places="' . $dec . '" number:min-integer-digits="1" number:min-exponent-digits="' . $exp . '"/>';
+		[$num, $at] = $m[0];
+		$before = substr($plain, 0, $at);
+		$after = substr($plain, $at + strlen($num));
+		if (($m['gen'][0] ?? null) !== null) {
+			// As Calc writes General: a number with no count of decimals.
+			$el = '<number:number number:min-integer-digits="1"/>';
+		} elseif (($m['frac'][0] ?? null) !== null) {
+			preg_match('/^(?:([#0?,]+) +)?([#0?]+)\/([#0?]+|\d+)$/', $num, $f);
+			$el = '<number:fraction';
+			if (($f[1] ?? '') !== '') {
+				$el .= ' number:min-integer-digits="' . substr_count($f[1], '0') . '"' . (str_contains($f[1], ',') ? ' number:grouping="true"' : '');
+			}
+			$el .= ' number:min-numerator-digits="' . strlen($f[2]) . '"';
+			if (ctype_digit($f[3])) {
+				$el .= ' number:denominator-value="' . (int)$f[3] . '"';
+			} else {
+				$el .= ' number:min-denominator-digits="' . strlen($f[3]) . '" number:max-denominator-value="' . str_repeat('9', strlen($f[3])) . '"';
+			}
+			$el .= '/>';
+		} elseif (($m['sci'][0] ?? null) !== null) {
+			preg_match('/^([#0,]*[0#])(?:\.([0#]*))?[Ee]([+-])(0+)$/', $num, $f);
+			$int = str_replace(',', '', $f[1]);
+			$dec = $f[2] ?? '';
+			$el = '<number:scientific-number number:decimal-places="' . strlen($dec) . '" number:min-decimal-places="' . substr_count($dec, '0') . '"'
+				. ' number:min-integer-digits="' . max(1, substr_count($int, '0')) . '" number:min-exponent-digits="' . strlen($f[4]) . '"'
+				. (strlen($int) > 1 && str_contains($int, '#') ? ' number:exponent-interval="' . strlen($int) . '"' : '')
+				. ' number:forced-exponent-sign="' . ($f[3] === '+' ? 'true' : 'false') . '"/>';
 		} else {
 			$parts = explode('.', $num, 2);
-			$grouping = str_contains($parts[0], ',');
-			$int = substr_count($parts[0], '0');
-			$dec = isset($parts[1]) ? strlen($parts[1]) : 0;
-			$minDec = isset($parts[1]) ? substr_count($parts[1], '0') : 0;
-			$out .= '<number:number number:decimal-places="' . $dec . '" number:min-decimal-places="' . $minDec . '" number:min-integer-digits="' . $int . '"' . ($grouping ? ' number:grouping="true"' : '') . '/>';
+			$dec = $parts[1] ?? '';
+			$el = '<number:number number:decimal-places="' . strlen($dec) . '" number:min-decimal-places="' . substr_count($dec, '0') . '"'
+				. (str_contains($dec, '?') ? ' number:decimal-replacement=" "' : '')
+				. ' number:min-integer-digits="' . substr_count($parts[0], '0') . '"' . (str_contains($parts[0], ',') ? ' number:grouping="true"' : '') . '/>';
 		}
-		if ($after !== '') {
-			$out .= $percent ? '<number:text>' . $esc($after) . '</number:text>' : $sym($after);
-		}
-		return $out;
+		return self::odsTextRun($before, $texts, $esc) . $el . self::odsTextRun($after, $texts, $esc);
 	}
 
 	private static function odsDateStyle(string $code, string $name, callable $esc): ?string {
@@ -312,7 +453,8 @@ final class NumberFormats {
 				$long = strlen($tok) >= 2 ? ' number:style="long"' : '';
 				switch ($lower) {
 					case 'yyyy': case 'yy':
-						$out .= '<number:year' . $long . '/>';
+						// yy is the two-digit year (06/11/24), yyyy the four-digit one
+						$out .= '<number:year' . ($lower === 'yyyy' ? ' number:style="long"' : '') . '/>';
 						break;
 					case 'ee': case 'e':
 						$out .= '<number:year' . $long . ' number:calendar="gengou"/>';

@@ -6,9 +6,17 @@ namespace OCA\CalcBase\Controller;
 
 use OCA\CalcBase\AppInfo\Application;
 use OCA\CalcBase\Service\BookService;
+use OCA\CalcBase\Service\Connectors;
+use OCA\CalcBase\Service\FetchRefused;
 use OCA\CalcBase\Service\FileBrowser;
 use OCA\CalcBase\Service\ImportExport;
+use OCA\CalcBase\Service\Model;
+use OCA\CalcBase\Service\SampleService;
+use OCA\CalcBase\Service\ShareService;
+use OCA\CalcBase\Service\SourceSheets;
+use OCA\CalcBase\Service\TextEncoding;
 use OCA\CalcBase\Service\VersionService;
+use OCA\CalcBase\Service\WebFetch;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -29,6 +37,11 @@ class ApiController extends Controller {
 		private FileBrowser $files,
 		private ImportExport $formats,
 		private VersionService $versions,
+		private Connectors $connectors,
+		private SourceSheets $sources,
+		private ShareService $sharing,
+		private SampleService $samples,
+		private WebFetch $web,
 		private IUserSession $userSession,
 		private IConfig $config,
 		private LoggerInterface $logger,
@@ -52,6 +65,12 @@ class ApiController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
 		} catch (NotPermittedException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+		} catch (FetchRefused $e) {
+			return new JSONResponse(['error' => $e->getMessage()], $e->status());
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			// Another app's record that is not there, or not this person's: the same
+			// answer for both, so asking does not tell whose ids exist.
+			return new JSONResponse(['error' => 'not found'], Http::STATUS_NOT_FOUND);
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
@@ -65,6 +84,12 @@ class ApiController extends Controller {
 			$this->logger->error('CalcBase: ' . $e->getMessage(), ['app' => Application::APP_ID, 'exception' => $e]);
 			return new JSONResponse(['error' => 'something went wrong on the server; the log says what'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	/** A request parameter as a string, '' when it is not there. */
+	private function str(string $name): string {
+		$v = $this->request->getParam($name);
+		return is_scalar($v) ? (string)$v : '';
 	}
 
 	#[NoAdminRequired]
@@ -86,10 +111,23 @@ class ApiController extends Controller {
 				'enterMoves' => $get('enterMoves', 'down'),
 				// The width of the AI panel: pixels, or a percentage of the window.
 				'aiWidth' => $get('aiWidth', '500px'),
+				// The width of the sheet bar at the right (EditBase's preview bar).
+				'sheetsWidth' => $get('sheetsWidth', '132px'),
 				// Gridlines on a new sheet; the typeface and size a new book starts with.
 				'gridDefault' => $get('gridDefault', '1'),
+				// The tabs under the sheet: off unless asked for -- the sheet bar shows the sheets (the owner, 2026-10-06).
+				'sheetTabs' => $get('sheetTabs', '0'),
+				// How big a book may be, in cells; 0 = no limit, at the writer's own risk (Model::CELL_LIMITS).
+				'cellLimit' => (static fn (array $l): int => $l['bytes'] === 0 ? 0 : $l['cells'])($this->books->limits($uid)),
 				'font' => $get('font', ''),
 				'fontSize' => $get('fontSize', '11'),
+				// The unit the column width and row height are asked in (EditBase's unit for the ruler; Calc's measurement unit).
+				'unit' => $get('unit', 'px'),
+				// The paper setup a new book starts from (JSON, produced by the screen).
+				'paper' => $get('paper', ''),
+				// What colour each category is drawn in, and the order of the books in each, as the writer chose.
+				'folderColours' => $get('folderColours', ''),
+				'bookOrder' => $get('bookOrder', ''),
 				'languages' => $this->availableLanguages(),
 				// What the browser has loaded is not always what is on the server: a
 				// page left open goes on running the code it started with. This is
@@ -133,30 +171,64 @@ class ApiController extends Controller {
 			if (is_string($when) && $when !== '') {
 				$this->versions->setWhen($uid, $when);
 			}
-			foreach (['autosave', 'gridDefault'] as $flag) {
+			foreach (['autosave', 'gridDefault', 'sheetTabs'] as $flag) {
 				$v = $this->request->getParam($flag);
 				if ($v === '1' || $v === '0' || is_bool($v)) {
 					$set($flag, $v === '1' || $v === true ? '1' : '0');
 				}
 			}
+			$cellLimit = $this->request->getParam('cellLimit');
+			if (is_numeric($cellLimit) && in_array((int)$cellLimit, Model::CELL_LIMITS, true)) {
+				$set('cellLimit', (string)(int)$cellLimit);
+			}
 			$enter = $this->request->getParam('enterMoves');
 			if ($enter === 'down' || $enter === 'right') {
 				$set('enterMoves', $enter);
 			}
-			$w = $this->request->getParam('aiWidth');
-			if (is_string($w) && preg_match('/^(\d{1,4}(?:\.\d{1,2})?)(px|%)$/', $w, $m)) {
-				$n = (float)$m[1];
-				if (($m[2] === 'px' && $n >= 240 && $n <= 1200) || ($m[2] === '%' && $n >= 15 && $n <= 60)) {
-					$set('aiWidth', $w);
+			// The widths of the AI panel and the sheet bar: pixels, or a percentage of the window.
+			foreach (['aiWidth' => [240, 15], 'sheetsWidth' => [60, 3]] as $key => [$minPx, $minPct]) {
+				$w = $this->request->getParam($key);
+				if (is_string($w) && preg_match('/^(\d{1,4}(?:\.\d{1,2})?)(px|%)$/', $w, $m)) {
+					$n = (float)$m[1];
+					if (($m[2] === 'px' && $n >= $minPx && $n <= 1200) || ($m[2] === '%' && $n >= $minPct && $n <= 60)) {
+						$set($key, $w);
+					}
 				}
 			}
 			$font = $this->request->getParam('font');
 			if (is_string($font) && preg_match('/^[^<>"\'\\\\;{}]{0,100}$/u', $font)) {
 				$set('font', trim($font));
 			}
+			$unit = $this->request->getParam('unit');
+			if (is_string($unit) && in_array($unit, ['px', 'pt', 'mm', 'cm', 'in'], true)) {
+				$set('unit', $unit);
+			}
 			$size = $this->request->getParam('fontSize');
 			if (is_numeric($size) && (float)$size >= 6 && (float)$size <= 72) {
 				$set('fontSize', (string)(float)$size);
+			}
+			$paper = $this->request->getParam('paper');
+			if (is_string($paper) && strlen($paper) < 4000) {
+				$set('paper', $paper);
+			}
+			$colours = $this->request->getParam('folderColours');
+			if (is_string($colours) && strlen($colours) < 4000) {
+				$set('folderColours', $colours);
+			}
+			// The order of the books in each category (the ids), kept only when the writer sorted them by hand.
+			$order = $this->request->getParam('bookOrder');
+			if (is_string($order) && strlen($order) < 200000) {
+				$parsed = json_decode($order, true);
+				if (is_array($parsed)) {
+					$clean = [];
+					foreach ($parsed as $cat => $ids) {
+						// The key is "c:<category>", so a category whose name is a number does not become a list.
+						if (is_string($cat) && strncmp($cat, 'c:', 2) === 0 && strlen($cat) < 300 && is_array($ids)) {
+							$clean[$cat] = array_values(array_map('intval', array_filter($ids, 'is_numeric')));
+						}
+					}
+					$set('bookOrder', $clean ? json_encode($clean, JSON_UNESCAPED_UNICODE) : '{}');
+				}
 			}
 			return ['ok' => true];
 		});
@@ -185,7 +257,12 @@ class ApiController extends Controller {
 
 	#[NoAdminRequired]
 	public function books(): JSONResponse {
-		return $this->run(fn () => ['books' => $this->books->list($this->uid())]);
+		// A freshly installed or upgraded app gives the sample books once (SampleService).
+		return $this->run(function () {
+			$uid = $this->uid();
+			$this->samples->ensure($uid);
+			return ['books' => $this->books->list($uid)];
+		});
 	}
 
 	#[NoAdminRequired]
@@ -193,8 +270,9 @@ class ApiController extends Controller {
 		return $this->run(function () {
 			$name = (string)($this->request->getParam('name') ?? 'Book');
 			$content = $this->request->getParam('content');
-			$folder = (string)($this->request->getParam('folder') ?? '');
-			return $this->books->create($this->uid(), $name, is_string($content) ? $content : '', $folder);
+			$folder = $this->str('folder');
+			$folderId = (int)($this->request->getParam('folderId') ?? 0);
+			return $this->books->create($this->uid(), $name, is_string($content) ? $content : '', $folder, $folderId);
 		});
 	}
 
@@ -215,7 +293,7 @@ class ApiController extends Controller {
 			if (!is_string($content)) {
 				throw new \InvalidArgumentException('content missing');
 			}
-			$etag = (string)($this->request->getParam('etag') ?? '');
+			$etag = $this->str('etag');
 			$manual = (bool)($this->request->getParam('manual') ?? false);
 			return $this->books->save($this->uid(), $id, $content, $etag, $manual);
 		});
@@ -237,7 +315,7 @@ class ApiController extends Controller {
 	#[NoAdminRequired]
 	public function renameBook(int $id): JSONResponse {
 		return $this->run(function () use ($id) {
-			$name = (string)($this->request->getParam('name') ?? '');
+			$name = $this->str('name');
 			if (trim($name) === '') {
 				throw new \InvalidArgumentException('name missing');
 			}
@@ -252,10 +330,7 @@ class ApiController extends Controller {
 
 	#[NoAdminRequired]
 	public function moveBook(int $id): JSONResponse {
-		return $this->run(function () use ($id) {
-			$path = (string)($this->request->getParam('folder') ?? '');
-			return $this->books->move($this->uid(), $id, $path);
-		});
+		return $this->run(fn () => $this->books->move($this->uid(), $id, $this->str('folder')));
 	}
 
 	#[NoAdminRequired]
@@ -276,11 +351,100 @@ class ApiController extends Controller {
 		});
 	}
 
+	// ---- categories ----
+
+	#[NoAdminRequired]
+	public function folders(): JSONResponse {
+		return $this->run(fn () => ['folders' => $this->books->folders($this->uid())]);
+	}
+
+	/** A category's own id, so it can be shared the way a book is. */
+	#[NoAdminRequired]
+	public function folderId(): JSONResponse {
+		return $this->run(fn () => ['id' => $this->books->folderId($this->uid(), $this->str('path'))]);
+	}
+
+	#[NoAdminRequired]
+	public function makeFolder(): JSONResponse {
+		return $this->run(fn () => ['folder' => $this->books->makeFolder($this->uid(), $this->str('path'))]);
+	}
+
+	#[NoAdminRequired]
+	public function deleteFolder(): JSONResponse {
+		return $this->run(function () {
+			$path = $this->str('path');
+			$this->books->deleteFolder($this->uid(), $path);
+			return ['deleted' => $path];
+		});
+	}
+
+	// ---- sharing ----
+
+	#[NoAdminRequired]
+	public function bookShares(int $id): JSONResponse {
+		return $this->run(fn () => ['shares' => $this->sharing->listShares($this->uid(), $id)]);
+	}
+
+	#[NoAdminRequired]
+	public function shareBook(int $id): JSONResponse {
+		return $this->run(function () use ($id) {
+			$with = $this->str('with');
+			$canEdit = (bool)($this->request->getParam('canEdit') ?? false);
+			return ['shares' => $this->sharing->share($this->uid(), $id, $with, $canEdit)];
+		});
+	}
+
+	#[NoAdminRequired]
+	public function unshareBook(int $id): JSONResponse {
+		return $this->run(fn () => ['shares' => $this->sharing->unshare($this->uid(), $id, $this->str('share'))]);
+	}
+
+	#[NoAdminRequired]
+	public function findUsers(): JSONResponse {
+		return $this->run(function () {
+			// ?search= (SPEC2) or ?term= (EditBase's screen): the same question.
+			$term = $this->str('search') !== '' ? $this->str('search') : $this->str('term');
+			return ['users' => $this->sharing->findUsers($this->uid(), $term)];
+		});
+	}
+
+	// ---- the sample books ----
+
+	#[NoAdminRequired]
+	public function samples(): JSONResponse {
+		return $this->run(fn () => $this->samples->status($this->uid()));
+	}
+
+	/** Put the sample books into the writer's folder again (the ones they deleted too). */
+	#[NoAdminRequired]
+	public function giveSamples(): JSONResponse {
+		return $this->run(fn () => $this->samples->give($this->uid(), true));
+	}
+
+	// ---- typefaces ----
+
+	/**
+	 * The Google Fonts catalogue that ships with the app (data/google-fonts.json),
+	 * as EditBase's: the picker works without calling Google at all, and the font
+	 * files themselves are fetched by the browser only once a family is in use.
+	 */
+	#[NoAdminRequired]
+	public function fonts(): JSONResponse {
+		return $this->run(function () {
+			$file = __DIR__ . '/../../data/google-fonts.json';
+			if (!is_file($file)) {
+				return ['families' => [], 'count' => 0];
+			}
+			$data = json_decode((string)file_get_contents($file), true);
+			return is_array($data) ? $data : ['families' => [], 'count' => 0];
+		});
+	}
+
 	// ---- the user's Files ----
 
 	#[NoAdminRequired]
 	public function browseFiles(): JSONResponse {
-		return $this->run(fn () => $this->files->browse($this->uid(), (string)($this->request->getParam('path') ?? '')));
+		return $this->run(fn () => $this->files->browse($this->uid(), $this->str('path')));
 	}
 
 	#[NoAdminRequired]
@@ -303,12 +467,135 @@ class ApiController extends Controller {
 			}
 			return $this->formats->export(
 				$this->uid(),
-				(string)($this->request->getParam('format') ?? ''),
+				$this->str('format'),
 				$model,
-				(string)($this->request->getParam('folder') ?? ''),
+				$this->str('folder'),
 				(string)($this->request->getParam('name') ?? 'Book'),
-				(string)($this->request->getParam('sheet') ?? ''),
+				$this->str('sheet'),
 			);
+		});
+	}
+
+	// ---- the other apps on this server, each as sheets (SPEC2 §B) ----
+
+	#[NoAdminRequired]
+	public function sources(): JSONResponse {
+		return $this->run(fn () => ['sources' => $this->connectors->available($this->uid())]);
+	}
+
+	#[NoAdminRequired]
+	public function regibaseCollections(): JSONResponse {
+		return $this->run(fn () => $this->sources->regibaseCollections($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function regibase(int $id): JSONResponse {
+		return $this->run(fn () => $this->sources->regibase($this->uid(), $id));
+	}
+
+	#[NoAdminRequired]
+	public function formulaCollections(): JSONResponse {
+		return $this->run(fn () => $this->sources->formulaCollections($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function formulabase(int $id): JSONResponse {
+		return $this->run(fn () => $this->sources->formulabase($this->uid(), $id));
+	}
+
+	#[NoAdminRequired]
+	public function editbaseDocuments(): JSONResponse {
+		return $this->run(fn () => $this->sources->editbaseDocuments($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function editbase(int $id): JSONResponse {
+		return $this->run(fn () => $this->sources->editbase($this->uid(), $id));
+	}
+
+	#[NoAdminRequired]
+	public function netbase(): JSONResponse {
+		return $this->run(fn () => $this->sources->netbase($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function tables(): JSONResponse {
+		return $this->run(fn () => $this->sources->tables($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function table(int $id): JSONResponse {
+		return $this->run(fn () => $this->sources->table($this->uid(), $id));
+	}
+
+	#[NoAdminRequired]
+	public function contacts(): JSONResponse {
+		return $this->run(fn () => $this->sources->contacts($this->uid(), $this->str('q')));
+	}
+
+	#[NoAdminRequired]
+	public function calendars(): JSONResponse {
+		return $this->run(fn () => $this->sources->calendars($this->uid()));
+	}
+
+	#[NoAdminRequired]
+	public function events(): JSONResponse {
+		return $this->run(function () {
+			$from = $this->str('from');
+			$to = $this->str('to');
+			if ($from === '' || $to === '') {
+				throw new \InvalidArgumentException('a date range is required');
+			}
+			return $this->sources->events($this->uid(), $from, $to, $this->str('cal') !== '' ? $this->str('cal') : $this->str('calendar'));
+		});
+	}
+
+	/**
+	 * The tables of a web page. The browser cannot read another site's page
+	 * itself, so the server asks for it -- only http and https, never this server
+	 * itself or a link-local address unless an administrator allows it (WebFetch),
+	 * and only what the page shows as tables is handed back, as cells.
+	 */
+	#[NoAdminRequired]
+	public function importWeb(): JSONResponse {
+		return $this->run(function () {
+			$url = $this->str('url');
+			if ($url === '') {
+				throw new \InvalidArgumentException('a web address is required');
+			}
+			$got = $this->web->get(
+				$url,
+				'text/html,application/xhtml+xml',
+				WebFetch::PAGE_BYTES,
+				true,
+				// No Content-Type at all is taken for a page, as it always was.
+				static fn (string $type): bool => $type === '' || stripos($type, 'html') !== false,
+				'that address is not a web page',
+				'that page is too large',
+			);
+			// Half the Japanese web is still Shift_JIS: the bytes are read for what
+			// they are before anything is made of them (TextEncoding).
+			$said = TextEncoding::declaredInContentType($got['type']);
+			if ($said === '') {
+				$said = TextEncoding::declaredInHtml($got['body']);
+			}
+			$read = TextEncoding::htmlToUtf8($got['body'], $said);
+			$out = SourceSheets::web($got['url'], $read['text']);
+			$out['truncated'] = $got['truncated'];
+			return $out;
+		});
+	}
+
+	/** The pipe tables of a Markdown file in the writer's Files. */
+	#[NoAdminRequired]
+	public function importMarkdown(): JSONResponse {
+		return $this->run(function () {
+			$fileId = (int)($this->request->getParam('fileId') ?? 0);
+			if ($fileId <= 0) {
+				throw new \InvalidArgumentException('fileId missing');
+			}
+			$file = $this->files->markdown($this->uid(), $fileId);
+			return SourceSheets::markdown($file['content'], $fileId, $file['name']);
 		});
 	}
 

@@ -20,9 +20,33 @@ final class XlsxFormat {
 	public const NS_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 	public const NS_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 	public const NS_PKG_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
-	/** Pixels per character of column width: Calibri 11, the format's yardstick. */
-	public const PX_PER_CHAR = 7;
-	public const COL_PADDING = 5;
+	/**
+	 * A column width in an XLSX file is a count of characters: of the widest digit
+	 * of the workbook's default font (the font of its "Normal" style). Calc turns
+	 * it into a length with that digit's width as its own fonts draw it --
+	 * oox/source/xls/unitconverter.cxx: the widest of 0-9, in whole twips -- and
+	 * CalcBase does the same, so that a column is as wide here as in Calc.
+	 *
+	 * The digit's width as a fraction of the font size, for the font LibreOffice
+	 * 24.2 on this server draws in place of each name (measured 2026-10-05: an
+	 * XLSX with one font, columns of 1, 10 and 50 characters, at 10, 11 and 14 pt,
+	 * opened by soffice; every one came out as round(em * pt * 20) twips a
+	 * character). A name not listed is drawn in Noto Sans, as Calibri, Verdana,
+	 * MS P Gothic, Yu Gothic, Meiryo and the like all were.
+	 */
+	private const DIGIT_EM = [
+		'liberation sans' => 0.5562, 'arial' => 0.5562, 'helvetica' => 0.5562, 'arimo' => 0.5562, 'century' => 0.5562,
+		'liberation serif' => 0.5, 'times new roman' => 0.5, 'tinos' => 0.5, 'ipagothic' => 0.5, 'ipaゴシック' => 0.5, 'ipapgothic' => 0.5,
+		'liberation mono' => 0.6001, 'courier new' => 0.6001, 'courier' => 0.6001, 'cousine' => 0.6001, 'consolas' => 0.6001, 'terminal' => 0.6001,
+		'dejavu sans' => 0.6362,
+		'ms 明朝' => 0.5586, 'ms mincho' => 0.5586, 'cambria' => 0.5586, 'georgia' => 0.5586,
+	];
+	private const DIGIT_EM_OTHER = 0.572;
+	/** What Calc adds to the base width (in digits) of a sheet with no default width of its own: five pixels. */
+	private const BASE_WIDTH_PADDING_PX = 5;
+	/** The font CalcBase's own XLSX files say is the default, as Calc's do: its digit is the same everywhere (Arial or its twin Liberation Sans). */
+	public const WRITE_FONT = 'Arial';
+	public const WRITE_SIZE = 10;
 
 	/** Excel's indexed colours 0..63, for files that still use them. */
 	private const INDEXED = ['000000', 'ffffff', 'ff0000', '00ff00', '0000ff', 'ffff00', 'ff00ff', '00ffff', '000000', 'ffffff', 'ff0000', '00ff00', '0000ff', 'ffff00', 'ff00ff', '00ffff',
@@ -45,30 +69,115 @@ final class XlsxFormat {
 		}
 		$rels = self::rels($zip, 'xl/_rels/workbook.xml.rels', 'xl/');
 		$sheetsMeta = [];
-		foreach ($wb->getElementsByTagNameNS(self::NS_MAIN, 'sheet') as $sh) {
+		foreach ($wb->getElementsByTagNameNS(self::NS_MAIN, 'sheet') as $index => $sh) {
 			$rid = $sh->getAttributeNS(self::NS_REL, 'id');
 			if (!isset($rels[$rid])) {
 				continue;
 			}
-			$sheetsMeta[] = ['name' => $sh->getAttribute('name') ?: ('Sheet' . (count($sheetsMeta) + 1)), 'part' => $rels[$rid]];
+			$sheetsMeta[] = ['name' => $sh->getAttribute('name') ?: ('Sheet' . (count($sheetsMeta) + 1)), 'part' => $rels[$rid], 'index' => $index];
 		}
 		if ($sheetsMeta === []) {
 			throw new \InvalidArgumentException('that file has no sheets');
 		}
 		if (count($sheetsMeta) > Model::MAX_SHEETS) {
-			throw new \InvalidArgumentException('that file has more than ' . Model::MAX_SHEETS . ' sheets');
+			throw new \InvalidArgumentException(Model::TOO_MANY_SHEETS);
 		}
 		$strings = [];
 		if ($zip->has('xl/sharedStrings.xml')) {
 			$strings = self::sharedStrings($zip->read('xl/sharedStrings.xml'));
 		}
-		$xfs = $zip->has('xl/styles.xml') ? self::styles($zip->dom('xl/styles.xml')) : [];
+		$stylesDoc = $zip->has('xl/styles.xml') ? $zip->dom('xl/styles.xml') : null;
+		[$fontName, $fontSize] = $stylesDoc !== null ? self::defaultFont($stylesDoc) : ['Calibri', 11.0];
+		$xfs = $stylesDoc !== null ? self::styles($stylesDoc, ['font' => $fontName, 'size' => $fontSize]) : [];
+		$digitMm = self::digitMm($fontName, $fontSize);
 		$count = 0;
 		$sheets = [];
 		foreach ($sheetsMeta as $meta) {
-			$sheets[] = self::sheet($zip->read($meta['part']), $meta['name'], $strings, $xfs, $date1904, $count);
+			$sheets[] = self::sheet($zip->read($meta['part']), $meta['name'], $strings, $xfs, $date1904, $count, $digitMm);
 		}
-		return ['sheets' => $sheets, 'active' => max(0, min(count($sheets) - 1, $active))];
+		// Defined names (Formulas ▸ Name Manager): the book's, and a sheet's own (localSheetId, the
+		// sheet's place in <sheets>). Excel's own (_xlnm.Print_Area, _xlnm._FilterDatabase) are not names one uses.
+		$names = [];
+		$byIndex = [];
+		foreach ($sheetsMeta as $i => $meta) {
+			$byIndex[$meta['index']] = $i;
+		}
+		foreach ($wb->getElementsByTagNameNS(self::NS_MAIN, 'definedName') as $dn) {
+			$name = $dn->getAttribute('name');
+			$text = trim($dn->textContent);
+			if (str_starts_with(strtolower($name), '_xlnm.') || !Model::validName($name) || $text === '' || strlen($text) > Model::MAX_FORMULA) {
+				continue;
+			}
+			$def = substr(FormulaSyntax::fromXlsx($text), 1);
+			if ($dn->hasAttribute('localSheetId')) {
+				$i = $byIndex[(int)$dn->getAttribute('localSheetId')] ?? null;
+				if ($i !== null) {
+					$sheets[$i]['names'][$name] = $def;
+				}
+			} else {
+				$names[$name] = $def;
+			}
+		}
+		$model = ['sheets' => $sheets, 'active' => max(0, min(count($sheets) - 1, $active))];
+		if ($names !== []) {
+			$model['names'] = $names;
+		}
+		// Calc reads an XLSX file as not case-sensitive, as Excel is ("a"="A" is TRUE; measured)
+		$model['calc'] = ['caseSensitive' => false];
+		return $model;
+	}
+
+	/**
+	 * The workbook's default font, name and size: the font of the cell style the
+	 * "Normal" style (builtinId 0) names, as Calc takes it
+	 * (StylesBuffer::getDefaultFont); the first font when there is no such style.
+	 *
+	 * @return array{0: string, 1: float}
+	 */
+	private static function defaultFont(\DOMDocument $doc): array {
+		$fonts = self::children($doc, 'fonts', 'font');
+		$styleXfs = self::children($doc, 'cellStyleXfs', 'xf');
+		$fontId = 0;
+		foreach (self::children($doc, 'cellStyles', 'cellStyle') as $cs) {
+			if ($cs->getAttribute('builtinId') === '0') {
+				$xf = $styleXfs[(int)$cs->getAttribute('xfId')] ?? null;
+				if ($xf !== null) {
+					$fontId = (int)$xf->getAttribute('fontId');
+				}
+				break;
+			}
+		}
+		$font = $fonts[$fontId] ?? $fonts[0] ?? null;
+		$name = 'Calibri';
+		$size = 11.0;
+		if ($font !== null) {
+			foreach ($font->childNodes as $p) {
+				if ($p instanceof \DOMElement && $p->localName === 'name' && $p->getAttribute('val') !== '') {
+					$name = $p->getAttribute('val');
+				} elseif ($p instanceof \DOMElement && $p->localName === 'sz' && is_numeric($p->getAttribute('val')) && (float)$p->getAttribute('val') > 0) {
+					$size = (float)$p->getAttribute('val');
+				}
+			}
+		}
+		return [$name, $size];
+	}
+
+	/** The width of the widest digit of a font, in millimetres, as Calc measures it: whole twips. */
+	public static function digitMm(string $font, float $size): float {
+		$key = mb_strtolower(trim(mb_convert_kana($font, 'as', 'UTF-8')), 'UTF-8');
+		$em = self::DIGIT_EM[$key] ?? self::DIGIT_EM_OTHER;
+		$twips = max(1, (int)round($em * $size * 20));
+		return $twips / 20 / 72 * 25.4;
+	}
+
+	/** A width in characters of that digit as CSS pixels (96 an inch). */
+	public static function pxOfChars(float $chars, float $digitMm): int {
+		return max(1, (int)round($chars * $digitMm / 25.4 * 96));
+	}
+
+	/** CSS pixels as a width in characters of the digit of the font CalcBase's own files name (WRITE_FONT). */
+	public static function charsOfPx(float $px): float {
+		return $px * 25.4 / 96 / self::digitMm(self::WRITE_FONT, self::WRITE_SIZE);
 	}
 
 	/** @return array<string, string> rId => part name */
@@ -129,7 +238,7 @@ final class XlsxFormat {
 	 *
 	 * @return list<array{fmt: ?string, s: array<string, mixed>, date: bool}>
 	 */
-	private static function styles(\DOMDocument $doc): array {
+	private static function styles(\DOMDocument $doc, array $base): array {
 		$custom = [];
 		foreach ($doc->getElementsByTagNameNS(self::NS_MAIN, 'numFmt') as $nf) {
 			$custom[(int)$nf->getAttribute('numFmtId')] = $nf->getAttribute('formatCode');
@@ -184,7 +293,6 @@ final class XlsxFormat {
 			}
 			$borders[] = $sides;
 		}
-		$base = $fonts[0] ?? [];
 		$out = [];
 		foreach (self::children($doc, 'cellXfs', 'xf') as $xf) {
 			$s = [];
@@ -199,10 +307,10 @@ final class XlsxFormat {
 				$s['color'] = $font['color'];
 			}
 			// The base font (the workbook's) is not written on every cell: only another one is.
-			if (isset($font['size']) && $font['size'] !== ($base['size'] ?? null)) {
+			if (isset($font['size']) && $font['size'] !== $base['size']) {
 				$s['size'] = $font['size'];
 			}
-			if (isset($font['font']) && $font['font'] !== ($base['font'] ?? null)) {
+			if (isset($font['font']) && $font['font'] !== $base['font']) {
 				$s['font'] = $font['font'];
 			}
 			$bg = $fills[(int)$xf->getAttribute('fillId')] ?? null;
@@ -210,8 +318,16 @@ final class XlsxFormat {
 				$s['bg'] = $bg;
 			}
 			$s += $borders[(int)$xf->getAttribute('borderId')] ?? [];
+			$span = null;
 			foreach ($xf->getElementsByTagNameNS(self::NS_MAIN, 'alignment') as $al) {
-				$ha = match ($al->getAttribute('horizontal')) { 'left' => 'left', 'center', 'centerContinuous', 'distributed' => 'center', 'right' => 'right', default => null };
+				// As Calc reads them (oox/source/xls/stylesbuffer.cxx): "distributed" and
+				// "justify" are both justified; "centerContinuous" is centred, and with
+				// "fill" it makes the empty cells after it one with it (see row()).
+				$horizontal = $al->getAttribute('horizontal');
+				$ha = match ($horizontal) { 'left' => 'left', 'center', 'centerContinuous' => 'center', 'right' => 'right', 'justify', 'distributed' => 'justify', default => null };
+				if ($horizontal === 'centerContinuous' || $horizontal === 'fill') {
+					$span = $horizontal;
+				}
 				$va = match ($al->getAttribute('vertical')) { 'top' => 'top', 'center', 'distributed' => 'middle', 'bottom' => 'bottom', default => null };
 				if ($ha !== null) {
 					$s['ha'] = $ha;
@@ -228,6 +344,7 @@ final class XlsxFormat {
 				'fmt' => $fmt === 'General' ? null : $fmt,
 				's' => Model::style($s),
 				'date' => $fmt !== 'General' && OdsWriter::kindOf($fmt) === 'date',
+				'span' => $span,
 			];
 		}
 		return $out;
@@ -273,25 +390,37 @@ final class XlsxFormat {
 	}
 
 	/** One worksheet part into a model sheet. */
-	private static function sheet(string $xml, string $name, array $strings, array $xfs, bool $date1904, int &$count): array {
+	private static function sheet(string $xml, string $name, array $strings, array $xfs, bool $date1904, int &$count, float $digitMm): array {
 		$reader = new \XMLReader();
 		if (!$reader->XML($xml, 'UTF-8', LIBXML_NONET)) {
 			throw new \InvalidArgumentException('a worksheet cannot be read');
 		}
 		$sheet = ['name' => mb_substr($name, 0, 64), 'cells' => [], 'cols' => [], 'rows' => [], 'merges' => []];
 		$shared = [];
+		$spans = [];
+		$defaultChars = null;
+		$baseChars = 8.0;
 		$doc = new \DOMDocument();
 		$more = $reader->read();
 		while ($more) {
 			if ($reader->nodeType === \XMLReader::ELEMENT) {
 				switch ($reader->localName) {
+					case 'sheetFormatPr':
+						if (is_numeric($reader->getAttribute('defaultColWidth'))) {
+							$defaultChars = (float)$reader->getAttribute('defaultColWidth');
+						}
+						if (is_numeric($reader->getAttribute('baseColWidth'))) {
+							$baseChars = (float)$reader->getAttribute('baseColWidth');
+						}
+						break;
 					case 'col':
 						$min = (int)$reader->getAttribute('min');
 						$max = min((int)$reader->getAttribute('max'), $min + 64);
 						$width = $reader->getAttribute('width');
-						$hidden = in_array($reader->getAttribute('hidden'), ['1', 'true'], true);
-						if (is_numeric($width) && !$hidden) {
-							$px = (int)round((float)$width * self::PX_PER_CHAR + self::COL_PADDING);
+						// A hidden column keeps its width, as Calc keeps it (the model has no
+						// "hidden" for a column yet; its width at least is not lost).
+						if (is_numeric($width) && (float)$width > 0) {
+							$px = self::pxOfChars((float)$width, $digitMm);
 							for ($c = $min; $c >= 1 && $c <= $max && $c <= Cells::MAX_COLS; $c++) {
 								$sheet['cols'][Cells::colName($c - 1)] = $px;
 							}
@@ -315,7 +444,7 @@ final class XlsxFormat {
 					case 'row':
 						$row = $reader->expand($doc);
 						if ($row instanceof \DOMElement) {
-							self::row($row, $sheet, $strings, $xfs, $date1904, $shared, $count);
+							self::row($row, $sheet, $strings, $xfs, $date1904, $shared, $count, $spans);
 						}
 						$more = $reader->next();
 						continue 2;
@@ -337,10 +466,42 @@ final class XlsxFormat {
 			$more = $reader->read();
 		}
 		$reader->close();
+		// Runs centred across, as merged cells. Calc makes them after the file's own
+		// merges, and one in the way of a run is undone by it (measured: a run
+		// B6:D6 over the file's C6:C7 leaves B6:D6 alone).
+		foreach ($spans as [$r, $c1, $c2]) {
+			if ($c2 > $c1) {
+				$sheet['merges'] = array_values(array_filter($sheet['merges'], static fn (string $m): bool => !self::overlaps([$m], $r, $c1, $c2)));
+				$sheet['merges'][] = Cells::rangeName($r, $c1, $r, $c2);
+			}
+		}
+		// The columns in use that the file gives no width: the sheet's default, as
+		// Calc reads it (WorksheetGlobals::setBaseColumnWidth / setDefaultColumnWidth):
+		// defaultColWidth digits, or else baseColWidth digits and five pixels.
+		$px = $defaultChars !== null
+			? self::pxOfChars($defaultChars, $digitMm)
+			: max(1, (int)round($baseChars * $digitMm / 25.4 * 96 + self::BASE_WIDTH_PADDING_PX));
+		[, $used] = Cells::extent($sheet['cells'], $sheet['merges']);
+		for ($c = 0; $c < $used; $c++) {
+			$sheet['cols'][Cells::colName($c)] ??= $px;
+		}
+		uksort($sheet['cols'], static fn ($a, $b): int => Cells::colIndex((string)$a) <=> Cells::colIndex((string)$b));
+		// the screen's own default is no width of its own (see Model::DEFAULT_COL_PX)
+		$sheet['cols'] = array_filter($sheet['cols'], static fn ($px): bool => $px !== Model::DEFAULT_COL_PX);
 		return Model::tidy($sheet);
 	}
 
-	private static function row(\DOMElement $row, array &$sheet, array $strings, array $xfs, bool $date1904, array &$shared, int &$count): void {
+	/**
+	 * One row's cells into the sheet. A cell aligned "centre across selection"
+	 * (or "fill") with something in it starts a run, and each empty cell aligned
+	 * the same right after it makes the run longer; Calc has no such alignment
+	 * and makes each run of more than one cell a merged cell
+	 * (SheetDataBuffer::setCellFormat / MergedRange::tryExpand), and so does
+	 * CalcBase: the Statistics Bureau's table 1 has its heading AI5 so over AJ5.
+	 *
+	 * @param list<array{0: int, 1: int, 2: int, 3: string}> $spans the runs: row, first and last column, alignment
+	 */
+	private static function row(\DOMElement $row, array &$sheet, array $strings, array $xfs, bool $date1904, array &$shared, int &$count, array &$spans = []): void {
 		$r = (int)$row->getAttribute('r') - 1;
 		if ($r < 0 || $r >= Cells::MAX_ROWS) {
 			return;
@@ -363,12 +524,35 @@ final class XlsxFormat {
 			$cell = self::cell($node, $r, $c, $strings, $xfs, $date1904, $shared);
 			if ($cell !== null) {
 				if (++$count > Model::MAX_CELLS) {
-					throw new \InvalidArgumentException('that file has more than ' . Model::MAX_CELLS . ' cells');
+					throw new \InvalidArgumentException(Model::TOO_MANY_CELLS);
 				}
 				$sheet['cells'][Cells::ref($r, $c)] = $cell;
 			}
+			$span = $node->hasAttribute('s') ? ($xfs[(int)$node->getAttribute('s')]['span'] ?? null) : null;
+			if ($span !== null) {
+				if (isset($cell['t']) || isset($cell['f'])) {
+					$spans[] = [$r, $c, $c, $span];
+				} elseif ($spans !== []) {
+					$last = &$spans[count($spans) - 1];
+					if ($last[3] === $span && $last[0] === $r && $last[2] + 1 === $c) {
+						$last[2] = $c;
+					}
+					unset($last);
+				}
+			}
 			$c++;
 		}
+	}
+
+	/** Whether any of the merges takes in a cell of row $r between columns $c1 and $c2. */
+	private static function overlaps(array $merges, int $r, int $c1, int $c2): bool {
+		foreach ($merges as $m) {
+			$box = Cells::parseRange($m);
+			if ($box !== null && $box[0] <= $r && $r <= $box[2] && $box[1] <= $c2 && $c1 <= $box[3]) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** @return array<string, mixed>|null */
@@ -404,6 +588,10 @@ final class XlsxFormat {
 			}
 			if ($text !== '') {
 				$out['f'] = mb_substr(FormulaSyntax::fromXlsx($text), 0, Model::MAX_FORMULA);
+				// an array formula: the range it fills (<f t="array" ref="C63:C63">)
+				if ($f->getAttribute('t') === 'array' && ($box = Cells::parseRange(str_replace('$', '', $f->getAttribute('ref')))) !== null) {
+					$out['a'] = Cells::rangeName(...$box);
+				}
 			}
 		}
 		switch ($type) {

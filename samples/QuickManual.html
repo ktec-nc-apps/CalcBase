@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="CalcBase 0.0.1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalcBase quick manual</title>
+<style id="cb-style">body.cb-book{margin:16px;font-family:"Noto Sans JP","Hiragino Sans","Segoe UI",Roboto,sans-serif;color:#111;background:#fff}
+.cb-sheet{margin:0 0 28px;page-break-after:always;break-after:page}
+.cb-sheet:last-child{page-break-after:auto;break-after:auto}
+h2.cb-sheet-name{margin:0 0 8px;font-size:14px;font-weight:600;color:#555}
+.cb-sheet table{border-collapse:collapse;table-layout:fixed;font-size:11pt}
+.cb-sheet td{border:1px solid #d4dae3;padding:0 4px;height:24px;overflow:hidden;white-space:nowrap;text-overflow:clip;vertical-align:bottom;line-height:1.25}
+.cb-sheet[data-grid="0"] td{border-color:transparent}
+.cb-sheet td[data-t="n"]{text-align:right}
+.cb-sheet td[data-t="e"]{color:#c62828;font-weight:600}
+.cb-sheet td a{color:#1d4ed8}
+.cb-sheet td[data-note]{position:relative}
+.cb-sheet td[data-note]::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent #d32f2f transparent transparent}
+.cb-area{position:relative;width:max-content}
+.cb-pic{position:absolute;display:block}
+.cb-sheet tr[style*="height:0px"]{display:none}
+@media print{body.cb-book{margin:0}.cb-sheet{margin:0}h2.cb-sheet-name{display:none}.cb-sheet td[data-note]::after{display:none}}</style>
+<style id="cb-page">@page{size:210mm 297mm;margin:15mm 15mm 15mm 15mm}section.cb-sheet:nth-of-type(1){page:cbs0}
+@page cbs0{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"Start here";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(2){page:cbs1}
+@page cbs1{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"Try it";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(3){page:cbs2}
+@page cbs2{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"Keys";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(4){page:cbs3}
+@page cbs3{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"Functions";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(5){page:cbs4}
+@page cbs4{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"Bring in and print";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}
+section.cb-sheet:nth-of-type(6){page:cbs5}
+@page cbs5{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#444;vertical-align:top;padding-top:3mm}@top-right{content:"AI assistant";font-size:9pt;color:#444;vertical-align:bottom;padding-bottom:3mm}}</style>
+</head>
+<body class="cb-book" data-active="0" data-paper="{&quot;size&quot;:&quot;A4&quot;,&quot;orientation&quot;:&quot;portrait&quot;,&quot;margin&quot;:{&quot;top&quot;:15,&quot;bottom&quot;:15,&quot;left&quot;:15,&quot;right&quot;:15},&quot;header&quot;:{&quot;l&quot;:&quot;&quot;,&quot;c&quot;:&quot;&quot;,&quot;r&quot;:&quot;{sheet}&quot;},&quot;footer&quot;:{&quot;l&quot;:&quot;&quot;,&quot;c&quot;:&quot;{page} / {pages}&quot;,&quot;r&quot;:&quot;&quot;},&quot;scale&quot;:&quot;fit&quot;,&quot;wide&quot;:1,&quot;tall&quot;:1,&quot;grid&quot;:false,&quot;headings&quot;:false,&quot;repeat&quot;:0}" data-styles="{&quot;Heading 1&quot;:{&quot;b&quot;:1,&quot;size&quot;:16},&quot;Heading 2&quot;:{&quot;b&quot;:1,&quot;size&quot;:13},&quot;Heading&quot;:{&quot;b&quot;:1,&quot;bb&quot;:&quot;2px solid #333333&quot;},&quot;Total&quot;:{&quot;b&quot;:1,&quot;bt&quot;:&quot;1px solid #333333&quot;,&quot;bb&quot;:&quot;3px double #333333&quot;},&quot;Note&quot;:{&quot;bg&quot;:&quot;#ffffcc&quot;,&quot;color&quot;:&quot;#333333&quot;,&quot;bt&quot;:&quot;1px solid #808080&quot;,&quot;br&quot;:&quot;1px solid #808080&quot;,&quot;bb&quot;:&quot;1px solid #808080&quot;,&quot;bl&quot;:&quot;1px solid #808080&quot;},&quot;Good&quot;:{&quot;bg&quot;:&quot;#ccffcc&quot;,&quot;color&quot;:&quot;#006600&quot;}}">
+<section class="cb-sheet" data-name="Start here" data-grid="0">
+<h2 class="cb-sheet-name">Start here</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">CalcBase quick manual</td></tr>
+<tr style="height:43px"><td colspan="2" data-t="s" style="white-space:normal">CalcBase is a spreadsheet that runs inside Nextcloud. A book is kept in Files as an ordinary .html file, which any browser opens and shows.</td></tr>
+<tr><td colspan="2" data-t="s">Formulas and functions are written as in LibreOffice Calc and Excel. Where the two differ, CalcBase follows Calc.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">The screen</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">The list on the left</td><td data-t="s" style="white-space:normal">Books and categories. Drag a book onto a category to move it there. Right-click for rename, share, delete and more.</td></tr>
+<tr><td data-t="s" style="font-weight:700">+ New book / +CSV</td><td data-t="s">Makes an empty book. +CSV makes one from a CSV, ODS, XLSX or Markdown table in your Files.</td></tr>
+<tr><td data-t="s" style="font-weight:700">The bar at the top</td><td data-t="s">Save, Print / PDF, Web preview, Paper setup, View the HTML, and More (…).</td></tr>
+<tr><td data-t="s" style="font-weight:700">The rows of tools</td><td data-t="s">Cell style, typeface and size, bold and the rest, colours, borders, alignment, merging, number formats.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">The rail on the left</td><td data-t="s" style="white-space:normal">Insert (functions, rows and columns, pictures, links, comments, names), Bring in, Data (sort, autofilter), and what is shown.</td></tr>
+<tr><td data-t="s" style="font-weight:700">The strip on the right</td><td data-t="s">Opens and shuts the AI assistant, and the sheet bar with a small picture of each sheet.</td></tr>
+<tr><td data-t="s" style="font-weight:700">The foot</td><td data-t="s">The sheet tabs (double-click to rename) and the sum, average and count of the selected cells.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">The other sheets</td></tr>
+<tr><td data-t="s" style="font-weight:700">Try it</td><td data-t="s">Change a number and the results of the formulas change at once.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Keys</td><td data-t="s">The keys are Calc's.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Functions</td><td data-t="s">The functions by group, each with an example worked out live.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Bring in and print</td><td data-t="s">Bringing in from other apps, exporting, printing, saving and sharing.</td></tr>
+<tr><td data-t="s" style="font-weight:700">AI assistant</td><td data-t="s">Asking the AI, and asking it to do things.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="Try it" data-grid="1">
+<h2 class="cb-sheet-name">Try it</h2>
+<table>
+<colgroup>
+<col style="width:130px">
+<col style="width:80px">
+<col style="width:90px">
+<col style="width:100px">
+</colgroup>
+<tbody>
+<tr><td colspan="4" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Try it</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Item</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Qty</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Price</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Amount</td></tr>
+<tr><td data-t="s">Apples</td><td data-t="n" data-v="3">3</td><td data-t="n" data-v="1.2" data-fmt="$#,##0.00">$1.20</td><td data-f="=B4*C4" data-t="n" data-v="3.5999999999999996" data-fmt="$#,##0.00">$3.60</td></tr>
+<tr><td data-t="s">Pears</td><td data-t="n" data-v="5">5</td><td data-t="n" data-v="0.8" data-fmt="$#,##0.00">$0.80</td><td data-f="=B5*C5" data-t="n" data-v="4" data-fmt="$#,##0.00">$4.00</td></tr>
+<tr><td data-t="s">Grapes</td><td data-t="n" data-v="2">2</td><td data-t="n" data-v="4.5" data-fmt="$#,##0.00">$4.50</td><td data-f="=B6*C6" data-t="n" data-v="9" data-fmt="$#,##0.00">$9.00</td></tr>
+<tr><td data-t="s" data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">Total</td><td data-f="=SUM(B4:B6)" data-t="n" data-v="10" data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">10</td><td data-style="Total" style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333"></td><td data-f="=SUM(D4:D6)" data-t="n" data-v="16.6" data-fmt="$#,##0.00" data-style="Total" data-note="=SUM(D4:D6) adds D4 to D6." title="=SUM(D4:D6) adds D4 to D6." style="font-weight:700;border-top:1px solid #333333;border-bottom:3px double #333333">$16.60</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">Change a quantity or a price, and the amounts and the total are worked out again at once.</td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">Press Ctrl+` to see the formulas themselves; press it again to see the values.</td></tr>
+<tr style="height:44px"><td colspan="4" data-t="s" style="white-space:normal">A cell with a red corner has a comment: rest the pointer on it.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="Keys" data-grid="0">
+<h2 class="cb-sheet-name">Keys</h2>
+<table>
+<colgroup>
+<col style="width:230px">
+<col style="width:560px">
+</colgroup>
+<tbody>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Keys</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">What they do</td></tr>
+<tr><td data-t="s" style="font-weight:700">Enter / Shift+Enter</td><td data-t="s">Enter what was typed and move down (or right, as the settings say) / back</td></tr>
+<tr><td data-t="s" style="font-weight:700">Tab / Shift+Tab</td><td data-t="s">Enter and move right / left</td></tr>
+<tr><td data-t="s" style="font-weight:700">F2</td><td data-t="s">Edit the cell, the caret at the end</td></tr>
+<tr><td data-t="s" style="font-weight:700">Esc</td><td data-t="s">Leave the cell as it was</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Enter / Alt+Enter</td><td data-t="s">A new line inside the cell</td></tr>
+<tr><td data-t="s" style="font-weight:700">F4</td><td data-t="s">Cycle the $ of the reference at the caret (A1 → $A$1 → A$1 → $A1)</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Z / Ctrl+Y</td><td data-t="s">Undo / redo</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+C / Ctrl+X / Ctrl+V</td><td data-t="s">Copy / cut / paste (formulas move along)</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Shift+V</td><td data-t="s">Paste values only</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+D</td><td data-t="s">Fill down</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+L / Ctrl+E / Ctrl+R</td><td data-t="s">Align left / centre / right</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+B / Ctrl+I / Ctrl+U</td><td data-t="s">Bold / italic / underline</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+1</td><td data-t="s">Cell properties</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+K</td><td data-t="s">Hyperlink</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+; / Ctrl+Shift+;</td><td data-t="s">Today’s date / the time now</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Shift+L</td><td data-t="s">AutoFilter</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl++ / Ctrl+-</td><td data-t="s">Insert cells / delete cells</td></tr>
+<tr><td data-t="s" style="font-weight:700">Alt+=</td><td data-t="s">AutoSum</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+`</td><td data-t="s">Show the formulas, or the values again</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+F</td><td data-t="s">Find and replace</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+S</td><td data-t="s">Save</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+A</td><td data-t="s">Select the whole sheet</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Arrow</td><td data-t="s">To the edge of the block of data, or of the sheet</td></tr>
+<tr><td data-t="s" style="font-weight:700">End</td><td data-t="s">To the last column in use</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+* (keypad)</td><td data-t="s">Select the block of data round the cursor</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+Home / Ctrl+End</td><td data-t="s">To A1 / to the last cell used</td></tr>
+<tr><td data-t="s" style="font-weight:700">Ctrl+PageUp / Ctrl+PageDown</td><td data-t="s">The sheet before / after</td></tr>
+<tr><td data-t="s" style="font-weight:700">Delete / Backspace</td><td data-t="s">Empty the cells, keeping their formats / choose what to delete</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s">While typing a formula, click (or drag over) cells to put their address into it.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="Functions" data-grid="1">
+<h2 class="cb-sheet-name">Functions</h2>
+<table>
+<colgroup>
+<col style="width:104px">
+<col style="width:124px">
+<col style="width:430px">
+<col style="width:110px">
+<col style="width:380px">
+</colgroup>
+<tbody>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Group</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Function</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Example (what is typed)</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Result</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">What it does</td></tr>
+<tr><td data-t="s">Mathematical</td><td data-t="s" style="font-weight:700">SUM</td><td data-t="s" style="font-family:monospace">=SUM(A27:A32)</td><td data-f="=SUM(A27:A32)" data-t="n" data-v="74">74</td><td data-t="s">The total of A27:A32</td></tr>
+<tr><td data-t="s">Mathematical</td><td data-t="s" style="font-weight:700">SUMIF</td><td data-t="s" style="font-family:monospace">=SUMIF(B27:B32,&quot;A&quot;,A27:A32)</td><td data-f="=SUMIF(B27:B32,&quot;A&quot;,A27:A32)" data-t="n" data-v="15">15</td><td data-t="s">The total of the rows where B is A</td></tr>
+<tr><td data-t="s">Mathematical</td><td data-t="s" style="font-weight:700">ROUND</td><td data-t="s" style="font-family:monospace">=ROUND(PI(),2)</td><td data-f="=ROUND(PI(),2)" data-t="n" data-v="3.14">3.14</td><td data-t="s">Rounded to two decimal places</td></tr>
+<tr><td data-t="s">Mathematical</td><td data-t="s" style="font-weight:700">MOD</td><td data-t="s" style="font-family:monospace">=MOD(17,5)</td><td data-f="=MOD(17,5)" data-t="n" data-v="2">2</td><td data-t="s">What is left when 17 is divided by 5</td></tr>
+<tr><td data-t="s">Statistical</td><td data-t="s" style="font-weight:700">AVERAGE</td><td data-t="s" style="font-family:monospace">=AVERAGE(A27:A32)</td><td data-f="=AVERAGE(A27:A32)" data-t="n" data-v="12.333333333333334">12.3333333333333</td><td data-t="s">The mean</td></tr>
+<tr><td data-t="s">Statistical</td><td data-t="s" style="font-weight:700">MAX / MIN</td><td data-t="s" style="font-family:monospace">=MAX(A27:A32)-MIN(A27:A32)</td><td data-f="=MAX(A27:A32)-MIN(A27:A32)" data-t="n" data-v="22">22</td><td data-t="s">The largest less the smallest</td></tr>
+<tr><td data-t="s">Statistical</td><td data-t="s" style="font-weight:700">COUNTIF</td><td data-t="s" style="font-family:monospace">=COUNTIF(A27:A32,&quot;&gt;10&quot;)</td><td data-f="=COUNTIF(A27:A32,&quot;&gt;10&quot;)" data-t="n" data-v="3">3</td><td data-t="s">How many numbers are above 10</td></tr>
+<tr><td data-t="s">Statistical</td><td data-t="s" style="font-weight:700">LARGE</td><td data-t="s" style="font-family:monospace">=LARGE(A27:A32,2)</td><td data-f="=LARGE(A27:A32,2)" data-t="n" data-v="18">18</td><td data-t="s">The second largest number</td></tr>
+<tr><td data-t="s">Logical</td><td data-t="s" style="font-weight:700">IF</td><td data-t="s" style="font-family:monospace">=IF(A27&gt;10,&quot;many&quot;,&quot;few&quot;)</td><td data-f="=IF(A27&gt;10,&quot;many&quot;,&quot;few&quot;)" data-t="s">many</td><td data-t="s">One answer or another, by a condition</td></tr>
+<tr><td data-t="s">Logical</td><td data-t="s" style="font-weight:700">IFERROR</td><td data-t="s" style="font-family:monospace">=IFERROR(1/0,&quot;cannot divide&quot;)</td><td data-f="=IFERROR(1/0,&quot;cannot divide&quot;)" data-t="s">cannot divide</td><td data-t="s">A value in place of an error</td></tr>
+<tr><td data-t="s">Text</td><td data-t="s" style="font-weight:700">CONCAT</td><td data-t="s" style="font-family:monospace">=CONCAT(&quot;Calc&quot;,&quot;Base&quot;)</td><td data-f="=CONCAT(&quot;Calc&quot;,&quot;Base&quot;)" data-t="s">CalcBase</td><td data-t="s">Joins texts</td></tr>
+<tr><td data-t="s">Text</td><td data-t="s" style="font-weight:700">LEFT</td><td data-t="s" style="font-family:monospace">=LEFT(&quot;CalcBase&quot;,4)</td><td data-f="=LEFT(&quot;CalcBase&quot;,4)" data-t="s">Calc</td><td data-t="s">The first four letters</td></tr>
+<tr><td data-t="s">Text</td><td data-t="s" style="font-weight:700">TEXT</td><td data-t="s" style="font-family:monospace">=TEXT(1234.5,&quot;#,##0.00&quot;)</td><td data-f="=TEXT(1234.5,&quot;#,##0.00&quot;)" data-t="s">1,234.50</td><td data-t="s">A number as formatted text</td></tr>
+<tr><td data-t="s">Lookup</td><td data-t="s" style="font-weight:700">VLOOKUP</td><td data-t="s" style="font-family:monospace">=VLOOKUP(25,A27:B32,2,0)</td><td data-f="=VLOOKUP(25,A27:B32,2,0)" data-t="s">C</td><td data-t="s">Column B of the row that holds 25</td></tr>
+<tr><td data-t="s">Lookup</td><td data-t="s" style="font-weight:700">INDEX / MATCH</td><td data-t="s" style="font-family:monospace">=INDEX(B27:B32,MATCH(3,A27:A32,0))</td><td data-f="=INDEX(B27:B32,MATCH(3,A27:A32,0))" data-t="s">A</td><td data-t="s">Column B of the row that holds 3</td></tr>
+<tr><td data-t="s">Lookup</td><td data-t="s" style="font-weight:700">XLOOKUP</td><td data-t="s" style="font-family:monospace">=XLOOKUP(18,A27:A32,B27:B32)</td><td data-f="=XLOOKUP(18,A27:A32,B27:B32)" data-t="s">B</td><td data-t="s">Column B of the row that holds 18</td></tr>
+<tr><td data-t="s">Date &amp; Time</td><td data-t="s" style="font-weight:700">DATE</td><td data-t="s" style="font-family:monospace">=DATE(2026,10,5)</td><td data-f="=DATE(2026,10,5)" data-t="n" data-v="46300" data-fmt="yyyy/mm/dd">2026/10/05</td><td data-t="s">A date from a year, a month and a day</td></tr>
+<tr><td data-t="s">Date &amp; Time</td><td data-t="s" style="font-weight:700">EDATE</td><td data-t="s" style="font-family:monospace">=EDATE(DATE(2026,1,31),1)</td><td data-f="=EDATE(DATE(2026,1,31),1)" data-t="n" data-v="46081" data-fmt="yyyy/mm/dd">2026/02/28</td><td data-t="s">A month later (a month end stays a month end)</td></tr>
+<tr><td data-t="s">Date &amp; Time</td><td data-t="s" style="font-weight:700">DATEDIF</td><td data-t="s" style="font-family:monospace">=DATEDIF(DATE(2026,4,1),DATE(2026,10,5),&quot;m&quot;)</td><td data-f="=DATEDIF(DATE(2026,4,1),DATE(2026,10,5),&quot;m&quot;)" data-t="n" data-v="6">6</td><td data-t="s">Whole months in between</td></tr>
+<tr><td data-t="s">Date &amp; Time</td><td data-t="s" style="font-weight:700">NETWORKDAYS</td><td data-t="s" style="font-family:monospace">=NETWORKDAYS(DATE(2026,10,1),DATE(2026,10,31))</td><td data-f="=NETWORKDAYS(DATE(2026,10,1),DATE(2026,10,31))" data-t="n" data-v="22">22</td><td data-t="s">Weekdays in between</td></tr>
+<tr><td data-t="s">Financial</td><td data-t="s" style="font-weight:700">PMT</td><td data-t="s" style="font-family:monospace">=PMT(0.03/12,36,-1000000)</td><td data-f="=PMT(0.03/12,36,-1000000)" data-t="n" data-v="29081.20963065292" data-fmt="$#,##0.00">$29,081.21</td><td data-t="s">The monthly payment on 1,000,000 at 3% over 36 months</td></tr>
+<tr><td data-t="s">Information</td><td data-t="s" style="font-weight:700">ISNUMBER</td><td data-t="s" style="font-family:monospace">=ISNUMBER(A27)</td><td data-f="=ISNUMBER(A27)" data-t="b" data-v="TRUE">TRUE</td><td data-t="s">Whether it is a number</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">The data the examples use</td><td></td><td></td><td></td><td></td></tr>
+<tr><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Number</td><td data-t="s" data-style="Heading" style="font-weight:700;border-bottom:2px solid #333333">Letter</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="12">12</td><td data-t="s">A</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="7">7</td><td data-t="s">B</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="25">25</td><td data-t="s">C</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="3">3</td><td data-t="s">A</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="18">18</td><td data-t="s">B</td><td></td><td></td><td></td></tr>
+<tr><td data-t="n" data-v="9">9</td><td data-t="s">C</td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="Bring in and print" data-grid="0">
+<h2 class="cb-sheet-name">Bring in and print</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">Bringing in, exporting, printing</td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Bring in (the rail on the left)</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">RegiBase</td><td data-t="s" style="white-space:normal">Choose a collection: a sheet with a row per record and a column per field. Dates stay dates and numbers numbers. Secret fields never come in.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">FormulaBase</td><td data-t="s" style="white-space:normal">A sheet of formulas, their variables and results. A result comes in as a live formula wherever it can be one.</td></tr>
+<tr><td data-t="s" style="font-weight:700">EditBase</td><td data-t="s">The tables of a document, one sheet each, their formulas kept.</td></tr>
+<tr><td data-t="s" style="font-weight:700">NetBase, Tables</td><td data-t="s">The devices NetBase has found, or one of your Tables, as a sheet.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Contacts, Calendar</td><td data-t="s">Your contacts, or the events of a stretch of days, as a sheet.</td></tr>
+<tr><td data-t="s" style="font-weight:700">A web page</td><td data-t="s">Type its address: every table on the page comes in, one sheet each.</td></tr>
+<tr><td data-t="s" style="font-weight:700">A file</td><td data-t="s">A CSV, ODS, XLSX or Markdown table in your Files.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Where it goes</td><td data-t="s">&quot;Add as new sheets&quot; or &quot;Put it at the cursor&quot;. Either way one Ctrl+Z takes it out again.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Export (…)</td></tr>
+<tr><td data-t="s" style="font-weight:700">CSV, ODS, XLSX</td><td data-t="s">Written next to the book. Formulas, values, number formats, styles, column widths and merges are kept.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Download a copy</td><td data-t="s">Saves the book's .html file to your computer.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Printing</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">Print / PDF</td><td data-t="s" style="white-space:normal">The used range, the selection, or every sheet. For a PDF, choose &quot;Save as PDF&quot; in the browser's print dialogue.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">Paper setup</td><td data-t="s" style="white-space:normal">Paper, orientation and margins, header and footer, scaling (fit to the page width, or to a number of pages). It is saved in the book.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">Header and footer</td><td data-t="s" style="white-space:normal">{page} is the page number, {pages} how many there are, {sheet} the sheet's name, {title} the book's, {date} the day it was printed.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Page breaks</td><td data-t="s">Under View on the rail: shows where the pages will fall.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Saving and sharing</td></tr>
+<tr><td data-t="s" style="font-weight:700">Saving</td><td data-t="s">What you type is saved as you go (the settings can switch this off). Ctrl+S saves at once.</td></tr>
+<tr><td data-t="s" style="font-weight:700">Versions</td><td data-t="s">Each save can keep the earlier book beside it (#01 to #99). Put one back from &quot;Versions…&quot; under More.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">Sharing</td><td data-t="s" style="white-space:normal">Right-click a book or a category and choose &quot;Share…&quot;: with other people on this server, to read or to write.</td></tr>
+<tr style="height:43px"><td data-t="s" style="font-weight:700">Check the book</td><td data-t="s" style="white-space:normal">Under More: looks for error values, formulas pointing at empty cells, numbers kept as text and columns wider than the paper.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="cb-sheet" data-name="AI assistant" data-grid="0">
+<h2 class="cb-sheet-name">AI assistant</h2>
+<table>
+<colgroup>
+<col style="width:190px">
+<col style="width:760px">
+</colgroup>
+<tbody>
+<tr><td colspan="2" data-t="s" data-style="Heading 1" style="font-weight:700;font-size:16pt">The AI assistant</td></tr>
+<tr style="height:43px"><td colspan="2" data-t="s" style="white-space:normal">Open &quot;AI assistant&quot; on the strip at the right to ask CalcBase's own AI questions, or to ask it to do things (when the administrator allows it).</td></tr>
+<tr><td colspan="2" data-t="s">Each question goes to the AI together with the used range of the open sheet and what is selected.</td></tr>
+<tr><td colspan="2" data-t="s">What the AI writes into cells comes off again with one Ctrl+Z.</td></tr>
+<tr><td colspan="2" data-t="s">The apps the administrator allows (RegiBase and the others) are read only when the AI needs them, and the AI never changes them.</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td colspan="2" data-t="s" data-style="Heading 2" style="font-weight:700;font-size:13pt">Things to ask</td></tr>
+<tr><td data-t="s" style="font-weight:700">Working out</td><td data-t="s">&quot;Put the total of B2:B10 in B11&quot;</td></tr>
+<tr><td data-t="s" style="font-weight:700">Explaining</td><td data-t="s">&quot;What does the formula in column D do?&quot;</td></tr>
+<tr><td data-t="s" style="font-weight:700">Building</td><td data-t="s">&quot;Add rows for the average and the largest value under this table&quot;</td></tr>
+<tr><td data-t="s" style="font-weight:700">How to</td><td data-t="s">&quot;How do I sort by sales, largest first?&quot;</td></tr>
+<tr><td data-t="s" style="font-weight:700">About a cell</td><td data-t="s">Right-click it and choose &quot;Ask the assistant about this cell&quot;.</td></tr>
+</tbody>
+</table>
+</section>
+</body>
+</html>

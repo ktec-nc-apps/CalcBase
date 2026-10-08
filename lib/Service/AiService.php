@@ -18,16 +18,21 @@ use OCP\IUserManager;
  * the assistant is not offered at all, and its admin settings are shown greyed out.
  *
  * What the assistant may do is set by the administrator: whether it is on, who
- * may use it, and whether it may search the web. It reads only what the browser
- * sends with a question -- the open book's sheet, as text -- and changes nothing
- * itself: the cells it proposes come back in the answer's shape (see AiScenario)
- * for the browser to apply as one step the person can undo.
+ * may use it, which apps it may read (read only -- it never changes anything in
+ * them), and whether it may search the web. It reads only what the browser sends
+ * with a question -- the open book's sheet, as text, and what the page read for
+ * it from an allowed app -- and changes nothing itself: the cells it proposes
+ * come back in the answer's shape (see AiScenario) for the browser to apply as
+ * one step the person can undo.
  */
 class AiService {
 	public const KEY_ENABLED = 'ai_enabled';
 	public const KEY_USERS = 'ai_users';
 	public const KEY_GROUPS = 'ai_groups';
+	public const KEY_READ = 'ai_read';
 	public const KEY_SEARCH = 'ai_search';
+	/** What the assistant may be allowed to read: the apps CalcBase can bring sheets in from. */
+	public const SOURCES = Connectors::SOURCES;
 	/** The name CalcBase's assistant is registered under at AI-Hub. */
 	public const SCENARIO = 'assistant';
 	/** The most one turn of the conversation may carry to AI-Hub (characters). */
@@ -93,19 +98,30 @@ class AiService {
 		return ['present' => true] + $hub->status(Application::APP_ID);
 	}
 
-	/** @return array{enabled: bool, users: string, groups: list<string>, search: bool} */
+	/**
+	 * Whether images can go with a question now: AI-Hub checks the connection this app
+	 * is given (an older AI-Hub says nothing about images, which reads as no).
+	 */
+	public function imagesOk(): bool {
+		$hub = $this->hub();
+		return $hub !== null && !empty($hub->status(Application::APP_ID)['images']);
+	}
+
+	/** @return array{enabled: bool, users: string, groups: list<string>, read: list<string>, search: bool} */
 	public function settings(): array {
 		$get = fn (string $k, string $d) => $this->config->getAppValue(Application::APP_ID, $k, $d);
 		$groups = json_decode($get(self::KEY_GROUPS, '[]'), true);
+		$read = json_decode($get(self::KEY_READ, '[]'), true);
 		return [
 			'enabled' => $get(self::KEY_ENABLED, 'no') === 'yes',
 			'users' => $get(self::KEY_USERS, 'all') === 'groups' ? 'groups' : 'all',
 			'groups' => is_array($groups) ? array_values(array_filter($groups, 'is_string')) : [],
+			'read' => is_array($read) ? array_values(array_intersect(self::SOURCES, $read)) : [],
 			'search' => $get(self::KEY_SEARCH, 'no') === 'yes',
 		];
 	}
 
-	/** @param array{enabled?: mixed, users?: mixed, groups?: mixed, search?: mixed} $in */
+	/** @param array{enabled?: mixed, users?: mixed, groups?: mixed, read?: mixed, search?: mixed} $in */
 	public function saveSettings(array $in): array {
 		$set = fn (string $k, string $v) => $this->config->setAppValue(Application::APP_ID, $k, $v);
 		$set(self::KEY_ENABLED, !empty($in['enabled']) ? 'yes' : 'no');
@@ -113,6 +129,8 @@ class AiService {
 		$groups = is_array($in['groups'] ?? null) ? $in['groups'] : [];
 		$groups = array_values(array_filter($groups, fn ($g) => is_string($g) && $this->groups->groupExists($g)));
 		$set(self::KEY_GROUPS, json_encode($groups));
+		$read = is_array($in['read'] ?? null) ? $in['read'] : [];
+		$set(self::KEY_READ, json_encode(array_values(array_intersect(self::SOURCES, $read))));
 		$set(self::KEY_SEARCH, !empty($in['search']) ? 'yes' : 'no');
 		return $this->settings();
 	}
@@ -140,7 +158,8 @@ class AiService {
 
 	/**
 	 * What the browser needs to know: whether to show the handle at all, whether a
-	 * question can be asked now, and the model that answers.
+	 * question can be asked now, the model that answers, and what the assistant
+	 * may read (only the apps that are there for this person).
 	 */
 	public function status(string $uid): array {
 		if (!$this->allowed($uid)) {
@@ -153,7 +172,10 @@ class AiService {
 			'ready' => $hub['ready'],
 			'reason' => $hub['reason'],
 			'model' => $hub['model'],
+			'read' => array_values(array_filter($s['read'], fn ($a) => $this->apps->isEnabledForUser($a === 'calendar' ? 'dav' : $a))),
 			'search' => $s['search'] && $hub['search'],
+			// whether the person may paste or drop images into a question
+			'images' => $this->imagesOk(),
 		];
 	}
 
@@ -162,33 +184,84 @@ class AiService {
 	 * are put into the prompt here, on the server; the browser sends only the
 	 * conversation and the open sheet.
 	 *
-	 * @param list<array{role: string, text: string}> $history
+	 * @param list<array{role: string, text: string, images?: int}> $history
 	 * @param array<string, mixed> $context
+	 * @param list<array{type: string, data: string}> $images Pasted or dropped into the question; AI-Hub checks them (kind, size, number).
 	 * @return array{id?: string, error?: string}
 	 */
-	public function ask(string $uid, array $history, string $message, array $context, string $lang): array {
+	public function ask(string $uid, array $history, string $message, array $context, string $lang, array $images = []): array {
 		if (!$this->allowed($uid)) {
 			return ['error' => 'not-allowed'];
+		}
+		$images = array_values(array_filter($images, 'is_array'));
+		if ($images !== [] && !$this->imagesOk()) {
+			return ['error' => 'no-images'];
 		}
 		$st = $this->status($uid);
 		// The browser keeps the conversation; the last 30 turns go to the hub, each cut
 		// to a length a person could have typed.
 		$messages = array_slice(array_values(array_filter($history, static fn ($t) => is_array($t)
 			&& in_array($t['role'] ?? '', ['user', 'assistant'], true) && is_string($t['text'] ?? null))), -30);
-		$messages = array_map(static fn (array $t) => ['role' => $t['role'], 'text' => mb_substr($t['text'], 0, self::MAX_TURN_CHARS)], $messages);
+		// A turn that had images says how many ('images' => n); AI-Hub puts a mark in their place.
+		$messages = array_map(static fn (array $t) => ['role' => $t['role'], 'text' => mb_substr($t['text'], 0, self::MAX_TURN_CHARS)]
+			+ (is_int($t['images'] ?? null) && $t['images'] > 0 ? ['images' => min($t['images'], 99)] : []), $messages);
 		$messages[] = ['role' => 'user', 'text' => mb_substr($message, 0, self::MAX_TURN_CHARS)];
+		$messages = self::withoutForbiddenReadings($messages, $st['read']);
 		$this->registerScenario();
-		return $this->hub()->ask($uid, Application::APP_ID, self::SCENARIO, $messages, [
-			'context' => AiScenario::perQuestion($st['search'], $context, $lang),
+		$options = [
+			'context' => AiScenario::perQuestion($st['read'], $st['search'], $context, $lang),
 			'search' => $st['search'],
-		]);
+		];
+		if ($images !== []) {
+			$options['images'] = $images;
+		}
+		return $this->hub()->ask($uid, Application::APP_ID, self::SCENARIO, $messages, $options);
+	}
+
+	/**
+	 * The administrator's "what it may read" held to on the server as well as in
+	 * the browser (EditBase review 2026-10-04, 低8). What the page read for the
+	 * assistant comes back to it as a message beginning "What CalcBase read for
+	 * {…}:" (EditBase's "What the editor read for {…}:" is taken too); one that
+	 * carries a reading from an app not allowed here is not passed on to the
+	 * model, whatever the browser said.
+	 *
+	 * @param list<array{role: string, text: string}> $messages
+	 * @param list<string> $read
+	 * @return list<array{role: string, text: string}>
+	 */
+	public static function withoutForbiddenReadings(array $messages, array $read): array {
+		foreach ($messages as &$m) {
+			if (($m['role'] ?? '') !== 'user' || !is_string($m['text'] ?? null)) {
+				continue;
+			}
+			$first = strtok($m['text'], "\n");
+			if ($first === false || !preg_match('/^What (?:CalcBase|the page|the editor) read for (\{.*\}):$/', $first, $hit)) {
+				continue;
+			}
+			$q = json_decode($hit[1], true);
+			$source = is_array($q) && is_string($q['source'] ?? null) ? $q['source'] : '';
+			$app = match ($source) {
+				'documents', 'document' => 'editbase',
+				'table' => 'tables',
+				'calendars', 'events' => 'calendar',
+				default => $source,
+			};
+			if (!in_array($app, $read, true)) {
+				$m['text'] = 'Not allowed: the administrator has not let the assistant read ' . ($app === '' ? 'that' : $app) . '.';
+			}
+		}
+		unset($m);
+		return $messages;
 	}
 
 	/**
 	 * The answer, with the cell changes it proposes cleaned to what the browser
-	 * applies: a sheet name, an A1 address and the text to type, at most MAX_EDITS.
+	 * applies: a sheet name, an A1 address and the text to type, at most MAX_EDITS;
+	 * and the reading it asks for, when it asks for one, as a source and plain
+	 * parameters.
 	 *
-	 * @return array{state: string, text?: string, reply?: string, edits?: list<array{sheet: ?string, cell: string, input: string}>, error?: string}
+	 * @return array{state: string, text?: string, reply?: string, edits?: list<array{sheet: ?string, cell: string, input: string}>, read?: array<string, mixed>, error?: string}
 	 */
 	public function result(string $uid, string $id): array {
 		$hub = $this->hub();
@@ -201,12 +274,17 @@ class AiService {
 		}
 		$answer = is_array($out['answer'] ?? null) ? $out['answer'] : [];
 		$reply = is_string($answer['reply'] ?? null) ? $answer['reply'] : (string)($out['text'] ?? '');
-		return [
+		$result = [
 			'state' => 'done',
 			'text' => (string)($out['text'] ?? ''),
 			'reply' => $reply,
 			'edits' => self::cleanEdits(is_array($answer['edits'] ?? null) ? $answer['edits'] : []),
 		];
+		$read = self::cleanRead($answer['read'] ?? null);
+		if ($read !== null) {
+			$result['read'] = $read;
+		}
+		return $result;
 	}
 
 	/**
@@ -234,6 +312,28 @@ class AiService {
 			];
 			if (count($out) >= self::MAX_EDITS) {
 				break;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * A reading the answer asks for: a known source and scalar parameters only.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public static function cleanRead(mixed $read): ?array {
+		if (!is_array($read) || !is_string($read['source'] ?? null)) {
+			return null;
+		}
+		$source = strtolower(trim($read['source']));
+		if (!in_array($source, self::SOURCES, true)) {
+			return null;
+		}
+		$out = ['source' => $source];
+		foreach (['collection', 'document', 'table', 'query', 'from', 'to', 'calendar'] as $k) {
+			if (isset($read[$k]) && is_scalar($read[$k])) {
+				$out[$k] = is_string($read[$k]) ? mb_substr($read[$k], 0, 200) : $read[$k];
 			}
 		}
 		return $out;

@@ -40,8 +40,23 @@ $reasons = [
 			<?php } ?>
 		</div>
 
-		<h3><?php p($l->t('What it reads')); ?></h3>
-		<p class="settings-hint"><?php p($l->t('Every question goes to the AI together with the open book: its name, the sheet names, the active sheet\'s used range as text with its formulas (the first 24,000 characters), and what is selected (up to 4,000 characters). Nothing else is read: no other books, no files, no other apps.')); ?></p>
+		<h3><?php p($l->t('What it may read (read only — it never changes anything there)')); ?></h3>
+		<p class="settings-hint"><?php p($l->t('Whatever is ticked here, every question goes to the AI together with the open book: its name, the sheet names, the active sheet\'s used range as text with its formulas (the first 24,000 characters), and what is selected (up to 4,000 characters). The apps ticked here are read only when the assistant asks for them, and only what the writer may see.')); ?></p>
+		<?php
+		$labels = [
+			'regibase' => $l->t('RegiBase (fields kept secret are never read)'),
+			'formulabase' => $l->t('FormulaBase'),
+			'editbase' => $l->t('The writer\'s EditBase documents (their tables)'),
+			'netbase' => $l->t('NetBase (the list of devices found on the local network)'),
+			'tables' => $l->t('Tables'),
+			'contacts' => $l->t('Contacts'),
+			'calendar' => $l->t('Calendar'),
+		];
+		foreach ($labels as $app => $label) { $there = !empty($_['apps'][$app]); ?>
+			<p><input type="checkbox" class="checkbox" id="cb-ai-read-<?php p($app); ?>" data-read="<?php p($app); ?>"
+				<?php if (in_array($app, $s['read'], true)) { p('checked'); } ?> <?php if (!$there) { p('disabled'); } ?>>
+				<label for="cb-ai-read-<?php p($app); ?>"><?php p($label); ?><?php if (!$there) { p(' ' . $l->t('(not installed)')); } ?></label></p>
+		<?php } ?>
 
 		<h3><?php p($l->t('Web search')); ?></h3>
 		<p><input type="checkbox" class="checkbox" id="cb-ai-search" <?php if ($s['search']) { p('checked'); } ?> <?php if (!$off && !$tb['search']) { p('disabled'); } ?>>

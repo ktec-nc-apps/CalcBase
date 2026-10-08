@@ -129,23 +129,40 @@ final class Cells {
 		return ($m[1] === '-' ? -1 : 1) * $seconds / 86400;
 	}
 
-	/** An ISO date ("2026-10-05") for a whole serial, with the time ("T10:30:00") when there is a fraction. */
+	/**
+	 * An ISO date ("2026-10-05") for a whole serial, with the time ("T10:30:00",
+	 * "T05:35:31.2") when there is a fraction. Seconds keep their fraction, to the
+	 * microsecond: rounded to whole seconds, 0.233 of a day came back 0.2 s out.
+	 */
 	public static function isoOfSerial(float $serial, bool $withTime = false): string {
 		$days = (int)floor($serial);
-		$frac = $serial - $days;
+		$us = (int)round(($serial - $days) * 86400e6);
+		if ($us >= 86400000000) {
+			$days++;
+			$us -= 86400000000;
+		}
 		[$y, $mo, $d] = self::civilFromDays($days + self::daysFromCivil(1899, 12, 30));
 		$out = sprintf('%04d-%02d-%02d', $y, $mo, $d);
-		if ($withTime || $frac > 1e-9) {
-			$s = (int)round($frac * 86400);
-			$out .= sprintf('T%02d:%02d:%02d', intdiv($s, 3600), intdiv($s % 3600, 60), $s % 60);
+		if ($withTime || $us > 0) {
+			$out .= 'T' . self::clock($us, ':');
 		}
 		return $out;
 	}
 
-	/** An ISO duration ("PT10H30M00S") for a fraction of a day. */
+	/** An ISO duration ("PT10H30M00S", "PT05H35M31.2S" as Calc writes it) for a fraction of a day. */
 	public static function durationOfSerial(float $serial): string {
-		$s = (int)round(abs($serial) * 86400);
-		return ($serial < 0 ? '-' : '') . sprintf('PT%02dH%02dM%02dS', intdiv($s, 3600), intdiv($s % 3600, 60), $s % 60);
+		$us = (int)round(abs($serial) * 86400e6);
+		return ($serial < 0 ? '-' : '') . 'PT' . self::clock($us, '');
+	}
+
+	/** Microseconds as 10:30:00.25 (with $sep ':') or 10H30M00.25S (with ''). */
+	private static function clock(int $us, string $sep): string {
+		$s = intdiv($us, 1000000);
+		$frac = $us % 1000000;
+		$sec = sprintf('%02d', $s % 60) . ($frac > 0 ? '.' . rtrim(sprintf('%06d', $frac), '0') : '');
+		return $sep === ''
+			? sprintf('%02dH%02dM', intdiv($s, 3600), intdiv($s % 3600, 60)) . $sec . 'S'
+			: sprintf('%02d:%02d:', intdiv($s, 3600), intdiv($s % 3600, 60)) . $sec;
 	}
 
 	/** Days since 1970-01-01 of a proleptic Gregorian date (Howard Hinnant's algorithm). */

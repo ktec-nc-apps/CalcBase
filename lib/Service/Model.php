@@ -17,9 +17,39 @@ final class Model {
 	public const MAX_SHEETS = 256;
 	/** Cells in all sheets together: a hundred thousand rows of ten columns. */
 	public const MAX_CELLS = 1000000;
+	/**
+	 * CalcBase is for the tables people keep by hand, not for bulk data (owner,
+	 * 2026-10-06). A book holds 100,000 cells unless its writer chooses more in
+	 * the settings, at their own risk; while there is a limit, a sheet also stops
+	 * at row 30,000 and a file at 24 MB, as EditBase's. "No limit" lifts all three.
+	 * The page enforces the same (applyLimits in calcbase.js); BookService::limits
+	 * reads the writer's choice.
+	 */
+	public const CELL_LIMITS = [100000, 300000, 600000, 0];
+	public const DEFAULT_CELL_LIMIT = 100000;
+	public const MAX_ROWS = 30000;
+	public const MAX_FILE_BYTES = 24 * 1024 * 1024;
+	/**
+	 * What an importer says when a file is over those limits. Written out, not
+	 * put together from the numbers: the screen shows the server's sentence in
+	 * the person's language by looking it up as it stands (calcbase-l10n.py
+	 * picks up a translated sentence only where it stands quoted in the source).
+	 */
+	public const TOO_MANY_CELLS = 'that file has more than 1,000,000 cells';
+	public const TOO_MANY_SHEETS = 'that file has more than 256 sheets';
+	/**
+	 * The width the screen gives a column the book has no width for (DEF_COL_W
+	 * in js/calcbase.js), in CSS pixels. A file is written with it for such a
+	 * column, so that it is as wide in Calc as on the screen, and a width of
+	 * exactly this is read as none.
+	 */
+	public const DEFAULT_COL_PX = 80;
 	/** The most a formula or a text may be, in characters. */
 	public const MAX_TEXT = 32767;
 	public const MAX_FORMULA = 8192;
+
+	/** Defined names a book may have, the book's and each sheet's together. */
+	public const MAX_NAMES = 10000;
 
 	/** The style keys of §3 and what each may hold. */
 	private const STYLE = ['b', 'i', 'u', 'strike', 'color', 'bg', 'ha', 'va', 'wrap', 'font', 'size', 'bt', 'br', 'bb', 'bl'];
@@ -30,7 +60,7 @@ final class Model {
 	 * @param mixed $in
 	 * @return array{sheets: list<array<string, mixed>>, active: int}
 	 */
-	public static function clean(mixed $in): array {
+	public static function clean(mixed $in, int $maxCells = self::MAX_CELLS, int $maxRows = Cells::MAX_ROWS): array {
 		if (!is_array($in) || !is_array($in['sheets'] ?? null) || !array_is_list($in['sheets'])) {
 			throw new \InvalidArgumentException('that is not a workbook');
 		}
@@ -43,6 +73,7 @@ final class Model {
 		$sheets = [];
 		$cells = 0;
 		$names = [];
+		$nameCount = 0;
 		foreach ($in['sheets'] as $i => $sheet) {
 			if (!is_array($sheet)) {
 				throw new \InvalidArgumentException('sheet ' . ($i + 1) . ' is not a sheet');
@@ -64,8 +95,11 @@ final class Model {
 				if ($clean === null) {
 					continue;
 				}
-				if (++$cells > self::MAX_CELLS) {
-					throw new \InvalidArgumentException('a workbook may have at most ' . self::MAX_CELLS . ' cells');
+				if ($at[0] >= $maxRows) {
+					throw new \InvalidArgumentException('a sheet may have at most ' . $maxRows . ' rows');
+				}
+				if (++$cells > $maxCells) {
+					throw new \InvalidArgumentException('a workbook may have at most ' . $maxCells . ' cells');
 				}
 				$out['cells'][Cells::ref($at[0], $at[1])] = $clean;
 			}
@@ -91,10 +125,74 @@ final class Model {
 			if (array_key_exists('grid', $sheet)) {
 				$out['grid'] = (bool)$sheet['grid'];
 			}
+			$own = self::names($sheet['names'] ?? null, $nameCount);
+			if ($own !== []) {
+				$out['names'] = $own;
+			}
 			$sheets[] = $out;
 		}
 		$active = (int)($in['active'] ?? 0);
-		return ['sheets' => $sheets, 'active' => max(0, min(count($sheets) - 1, $active))];
+		$model = ['sheets' => $sheets, 'active' => max(0, min(count($sheets) - 1, $active))];
+		$bookNames = self::names($in['names'] ?? null, $nameCount);
+		if ($bookNames !== []) {
+			$model['names'] = $bookNames;
+		}
+		// the document's calculation settings, where they are not a new document's (see OdsFormat)
+		if (is_array($in['calc'] ?? null)) {
+			$calc = [];
+			if (($in['calc']['regex'] ?? false) === true) {
+				$calc['regex'] = true;
+			}
+			if (($in['calc']['caseSensitive'] ?? true) === false) {
+				$calc['caseSensitive'] = false;
+			}
+			if (is_int($in['calc']['decimals'] ?? null) && $in['calc']['decimals'] >= 0 && $in['calc']['decimals'] <= 20) {
+				$calc['decimals'] = $in['calc']['decimals'];
+			}
+			if ($calc !== []) {
+				$model['calc'] = $calc;
+			}
+		}
+		return $model;
+	}
+
+	/**
+	 * Whether a text may be a defined name, as Calc allows one: a letter or _ first, then
+	 * letters, digits, _ and .; not a cell address (A1, XFD12), not R1C1, not TRUE or FALSE.
+	 */
+	public static function validName(string $name): bool {
+		return preg_match('/^[\p{L}_][\p{L}\p{N}_.]{0,254}$/u', $name) === 1
+			&& !preg_match('/^[A-Za-z]{1,3}\d+$/', $name) && !preg_match('/^R\d*C\d*$/i', $name)
+			&& !preg_match('/^(TRUE|FALSE)$/i', $name);
+	}
+
+	/**
+	 * Defined names as the book keeps them: name => what it stands for, a reference or a formula
+	 * without its = ("$Sheet1.$A$1:$B$5"). What is not a name, or too long, is left out.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function names(mixed $in, ?int &$count): array {
+		$out = [];
+		if (!is_array($in)) {
+			return $out;
+		}
+		foreach ($in as $name => $def) {
+			$name = (string)$name;
+			if (!is_string($def) || !self::validName($name)) {
+				continue;
+			}
+			$def = trim($def);
+			$def = str_starts_with($def, '=') ? substr($def, 1) : $def;
+			if ($def === '' || mb_strlen($def) > self::MAX_FORMULA) {
+				continue;
+			}
+			if (++$count > self::MAX_NAMES) {
+				throw new \InvalidArgumentException('a workbook may have at most ' . self::MAX_NAMES . ' names');
+			}
+			$out[$name] = $def;
+		}
+		return $out;
 	}
 
 	/** @return array<string, mixed>|null */
@@ -113,6 +211,10 @@ final class Model {
 		if (is_string($cell['f'] ?? null) && trim($cell['f']) !== '') {
 			$f = trim($cell['f']);
 			$out['f'] = mb_substr(str_starts_with($f, '=') ? $f : '=' . $f, 0, self::MAX_FORMULA);
+			// an array formula (Ctrl+Shift+Enter): the range it fills, on the cell that holds it (§2 data-a)
+			if (is_string($cell['a'] ?? null) && ($box = Cells::parseRange(str_replace('$', '', $cell['a']))) !== null) {
+				$out['a'] = Cells::rangeName(...$box);
+			}
 		}
 		if ($t !== null && $v !== null && !is_array($v)) {
 			$out['t'] = $t;
@@ -131,6 +233,10 @@ final class Model {
 		}
 		if (is_string($cell['fmt'] ?? null) && $cell['fmt'] !== '' && $cell['fmt'] !== 'General') {
 			$out['fmt'] = mb_substr($cell['fmt'], 0, 255);
+		}
+		// A link on the cell (a URL from RegiBase, a web table's anchor): http(s) or mailto only.
+		if (is_string($cell['link'] ?? null) && preg_match('#^(https?://|mailto:)\S{1,2040}$#i', trim($cell['link']))) {
+			$out['link'] = trim($cell['link']);
 		}
 		$style = self::style(is_array($cell['s'] ?? null) ? $cell['s'] : []);
 		if ($style !== []) {
@@ -217,7 +323,8 @@ final class Model {
 					}
 					break;
 				case 'ha':
-					if (in_array($v, ['left', 'center', 'right'], true)) {
+					// justify: Calc's "Justified" (and what Excel's "distributed" is in Calc)
+					if (in_array($v, ['left', 'center', 'right', 'justify'], true)) {
 						$out[$k] = $v;
 					}
 					break;
