@@ -1,12 +1,12 @@
 # CalcBase 📊
 
 **A spreadsheet for Nextcloud whose workbooks are ordinary web pages.**
-**Nextcloud 用の表計算です。ブックそのものが、ふつうの Web ページとして保存されます。**
+**Nextcloud で使える表計算アプリです。作ったブックは、そのまま普通の Web ページになります。**
 
 > A personal project, written for my own use and shared in case it is useful to someone.
 > Self-hosted; your data stays in your own Nextcloud.
-> 自分用に作った個人プロジェクトで、どなたかの役に立てばと思い公開しています。
-> セルフホストで、データはあなた自身の Nextcloud の中だけに保存されます。
+> 自分で使うために作った個人プロジェクトです。どなたかのお役に立てればと思い、公開しています。
+> セルフホスト型なので、データはお使いの Nextcloud の中にだけ保存されます。
 
 [English ↓](#english) · [日本語 ↓](#japanese)
 
@@ -112,47 +112,28 @@ sudo -u www-data php occ app:enable calcbase
 
 ### 概要
 
-CalcBase は、すべてのブックを自分の Files の中の 1 枚の独立した `.html` ファイルとして保存します。
-シートはそれぞれ HTML の表で、各セルには表示される文字と、その横に式・正確な値・表示形式が
-セルの属性として入ります。CalcBase が無くても、どの端末のどのブラウザでも表として正しく開けて、
-CalcBase で開けば計算する表計算に戻ります。
+CalcBase は、ブックを1つの `.html` ファイルとして、ご自身の Files に保存します。各シートは HTML の表で、セルには表示される値に加えて、数式・正確な値・表示形式がセルの属性として保存されます。そのため CalcBase がなくても、どの端末のブラウザーでも表として正しく表示でき、CalcBase で開けば再び計算できる表として使えます。
 
-素の HTML を書き出すワードプロセッサ [EditBase](https://github.com/ktec-nc-apps/EditBase) と
-同じシリーズの表計算で、作り方も同じです。HTML5 と CSS が先、JavaScript はそれで無理なこと
-（ここでは計算）にだけ使います。
+標準の HTML で文書を保存するワープロ [EditBase](https://github.com/ktec-nc-apps/EditBase) と同じシリーズの表計算アプリで、設計方針も同じです。HTML5 と CSS を基本とし、JavaScript は HTML と CSS ではできないこと（CalcBase では計算）にだけ使います。
 
-CalcBase は、素の HTML を書き出すワードプロセッサ EditBase から派生したアプリです。画面と、文書を普通の
-HTML ファイルとして保つ仕組みは EditBase に倣い、EditBase の文書の表を取り込むこともできます。
+CalcBase は EditBase から派生したアプリです。画面構成や、データを普通の HTML ファイルとして保存する仕組みは EditBase と共通で、EditBase の文書に含まれる表を取り込むこともできます。
 
-無料の [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを入れると、大規模言語モデル（LLM）を補助として
-使えます。式の説明と作成、頼まれたセルの変更（すべて取り消せます）ができます。AI サービスとキーは AI-Hub で
-一度設定し、管理者が有効にするまで使えません。
+無料の [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを入れると、大規模言語モデル（LLM）をアシスタントとして使えます。数式の説明や作成のほか、頼めばセルの内容を変更します（変更はすべて元に戻せます）。AI サービスと API キーは AI-Hub で一度設定するだけです。アシスタントは、管理者が有効にするまで使えません。
 
 ### 主な機能
 
-- **LibreOffice Calc と同じ書き方の式** ― `=SUM(B2:B5)`、`=VLOOKUP(A2;価格.A:B;2;0)`、
-  `=IF(C2>0,"はい","いいえ")`。引数の区切りは `,` と `;` のどちらでも、別のシートは
-  `Sheet2.A1` でも `Sheet2!A1` でも、`$` の絶対参照、列全体・行全体も書けます。
-- **関数 494 個** ― 数学・統計・論理・文字列・検索/行列・日付/時刻（和暦を含む）・情報・財務。
-  LibreOffice Calc と Excel で違う所は Calc に合わせ、エンジンの検査（3,563 件・その多くは
-  LibreOffice 24.2 自身の答え）がすべて通っています。
-- **画面に見えている所だけを描く表**で、変更に関わる所だけを再計算します。CalcBase は手で整える
-  表のためのもので、大量のデータ向けではありません。既定では 1 冊 10 万セル・1 シート 3 万行・
-  1 ファイル 24 MB までで、設定で上げられます（自己責任）。
-- Calc と同じ操作：入力、Enter と Tab、セル内と数式バーでの編集、式の入力中にセルを指して参照を入れる、
-  F4 で `$`、マウスとキーボードでの選択、コピーと貼り付け（LibreOffice・Excel・Google スプレッドシートとの間でも）、
-  フィルハンドル（連続データと式）、行と列の挿入と削除（式が追随）、元に戻す/やり直し、検索と置換。
-- 表示形式（数値・通貨・パーセント・日付・時刻・文字列・自分で書く書式）、フォント、太字・斜体・下線、
-  文字色・塗りつぶし・罫線・配置・折り返し、セルの結合、列の幅と行の高さ、ウィンドウ枠の固定、並べ替えとオートフィルター。
-- 1 つのブックに複数のシート。タブから名前の変更・移動・複製ができます。
-- **取り込み**：CSV/TSV（UTF-8 と Shift_JIS）・ODS・XLSX。**書き出し**：CSV・ODS・XLSX（式も含めて）。同じシリーズのアプリや Nextcloud からも取り込めます：RegiBase・FormulaBase・EditBase・NetBase・Tables・連絡先・カレンダー・Web ページ・Markdown。
-- ブックの横に残る版（`ブック.#01.html` …）、自動保存、シートや選択範囲の用紙設定付きの印刷。
-- [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを通した **AI アシスタント**。表計算を知っているチャットが
-  シートの横に出て、式を説明したり書いたりし、頼めばセルを変更します（すべて元に戻せます）。
-  管理者が有効にするまでは使えず、全員か選んだグループにだけ許可できます。
-- ライトとダークのテーマ、日本語と英語、スマートフォン向けの画面。
+- **LibreOffice Calc と同じ書き方の数式**：`=SUM(B2:B5)`、`=VLOOKUP(A2;価格.A:B;2;0)`、`=IF(C2>0,"はい","いいえ")` など。引数の区切りには `,` と `;` のどちらも使えます。ほかのシートは `Sheet2.A1` または `Sheet2!A1` で参照でき、`$` による絶対参照や、列全体・行全体の指定にも対応しています。
+- **494 種類の関数**：数学、統計、論理、文字列、検索/行列、日付/時刻（和暦を含む）、情報、財務。LibreOffice Calc と Excel で動作が異なる場合は Calc に合わせています。計算エンジンのテスト（3,563 項目。その多くは LibreOffice 24.2 の実際の計算結果と照合）にすべて合格しています。
+- **画面に表示されている部分だけを描画するグリッド**で、変更の影響を受けるセルだけを再計算します。CalcBase は手入力で管理する表のためのアプリで、大量のデータの処理には向きません。既定の上限は 1ブック 10万セル、1シート 3万行、1ファイル 24 MB です。上限は設定で引き上げられます（自己責任）。
+- Calc と同じ操作感：入力、Enter キーと Tab キー、セル内や数式バーでの編集、数式の入力中にセルをクリックして参照を入力、F4 で `$` を付ける、マウスとキーボードでの選択、コピーと貼り付け（LibreOffice・Excel・Google スプレッドシートとの間でも可能）、フィルハンドル（連続データと数式）、行と列の挿入と削除（数式も追従）、元に戻す／やり直し、検索と置換。
+- 表示形式（数値、通貨、パーセント、日付、時刻、文字列、ユーザー定義）、フォント、太字・斜体・下線、文字色、塗りつぶし、罫線、配置、折り返し、セルの結合、列の幅と行の高さ、ウィンドウ枠の固定、並べ替え、オートフィルター。
+- 1つのブックに複数のシートを作成でき、シート見出しから名前の変更・移動・コピーができます。
+- **取り込み**：CSV/TSV（UTF-8 または Shift_JIS）、ODS、XLSX。**書き出し**：CSV、ODS、XLSX（数式も含む）。同じシリーズのアプリや Nextcloud のアプリからも取り込めます（RegiBase、FormulaBase、EditBase、NetBase、Tables、連絡先、カレンダー、Web ページ、Markdown ファイル）。
+- バージョンをブックと同じ場所に保存（`ブック.#01.html` …）、自動保存、ページ設定を指定したシートまたは選択範囲の印刷。
+- [AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリを使った **AI アシスタント**：シートの横に表計算に詳しいチャットが表示され、数式の説明や作成、頼まれたセルの変更を行います（変更はすべて元に戻せます）。管理者が有効にするまでは使えません。利用は全員、または選んだグループだけに許可できます。
+- ライト／ダークテーマ、日本語・英語に対応、スマートフォン向けのレイアウト。
 
-### 書き出す HTML
+### 保存されるファイル
 
 ```html
 <section class="cb-sheet" data-name="Sheet1">
@@ -166,8 +147,7 @@ HTML ファイルとして保つ仕組みは EditBase に倣い、EditBase の�
 
 ### まだできないこと
 
-グラフ、ピボットテーブル、条件付き書式、入力規則、配列数式（Ctrl+Shift+Enter）、マクロ、
-複数人での同時編集。
+グラフ、ピボットテーブル、条件付き書式、入力規則、配列数式（Ctrl+Shift+Enter）、マクロ、同じブックの複数人での同時編集。
 
 ### 動作要件
 
@@ -175,9 +155,9 @@ HTML ファイルとして保つ仕組みは EditBase に倣い、EditBase の�
 - PHP 8.1 以上
 - AI アシスタントを使う場合：[AI-Hub](https://github.com/ktec-nc-apps/AI-Hub) アプリ
 
-### 導入
+### インストール
 
-アプリを Nextcloud の `apps` フォルダーに `calcbase` として置き、有効にします：
+アプリを Nextcloud の `apps` フォルダーに `calcbase` という名前でコピーし、有効にします：
 
 ```sh
 sudo -u www-data php occ app:enable calcbase
@@ -185,18 +165,18 @@ sudo -u www-data php occ app:enable calcbase
 
 ### 現在の状態
 
-0.1.0 ― 最初の公開版です。
+0.1.0 ― 最初の公開バージョンです。
 
 ## Screenshots
 
 | | |
 |---|---|
 | ![A sheet with formulas](screenshots/01-sheet.png) | ![Cell properties](screenshots/02-cell-properties.png) |
-| A sheet with formulas / 式の入ったシート | Cell properties / セルのプロパティ |
+| A sheet with formulas / 数式の入ったシート | Cell properties / セルのプロパティ |
 | ![Insert function](screenshots/03-functions.png) | ![Settings](screenshots/04-settings.png) |
 | Insert function / 関数の挿入 | Settings / 設定 |
 | ![Bring in sheets from the other apps](screenshots/05-bring-in.png) | |
-| Bring in sheets from the other apps / ほかのアプリから取り込む | |
+| Bring in sheets from the other apps / ほかのアプリからシートを取り込む | |
 
 ## Licence
 

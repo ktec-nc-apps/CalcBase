@@ -3,7 +3,7 @@
 	<id>calcbase</id>
 	<name>CalcBase</name>
 	<summary>Spreadsheet that writes plain HTML — Calc-compatible formulas, ODS and XLSX import and export, no proprietary format</summary>
-	<summary lang="ja">成果物がそのままHTMLになる表計算 ― Calc互換の式・ODS/XLSXの取り込みと書き出し・独自フォーマットなし</summary>
+	<summary lang="ja">標準の HTML でブックを保存する表計算アプリ ― Calc 互換の数式、ODS/XLSX の取り込みと書き出し、独自フォーマットなし</summary>
 	<description><![CDATA[CalcBase is a spreadsheet whose workbooks are ordinary web pages. Every workbook is saved to your Nextcloud Files as a single self-contained .html file with its stylesheet inside it, so it opens in any browser, on any device, for as long as browsers exist — the sheets are shown as tables, with their values, formulas, formats and styles written into the page itself.
 
 Formulas are written as in LibreOffice Calc and Excel: =SUM(B2:B5), Sheet2.A1 or Sheet2!A1, absolute references with $, whole columns and rows. Where Calc and Excel differ, CalcBase follows LibreOffice Calc. Workbooks are calculated in the browser; nothing is sent anywhere.
@@ -21,24 +21,24 @@ Features:
 - An AI assistant, through the AI-Hub app: a chat beside the sheet that knows spreadsheets and Calc formulas, and proposes changes to cells that are applied as one undoable step
 - Japanese and English interface; light and dark themes
 - HTML5 and CSS first: a workbook is readable without any program but a browser; JavaScript is used only for what HTML and CSS cannot do]]></description>
-	<description lang="ja"><![CDATA[CalcBaseは、ブック（ワークブック）そのものがWebページである表計算です。すべてのブックは、スタイルシートを内包した1枚の独立した .html ファイルとして、あなたのNextcloud Filesに保存されます。どの端末のどのブラウザでも、ブラウザが存在する限り開けます ― シートは表として表示され、値・式・表示形式・書式はページ自体に書き込まれています。
+	<description lang="ja"><![CDATA[CalcBase は、作ったブックがそのまま Web ページになる表計算アプリです。ブックはすべて、スタイルシートを含む1つの .html ファイルとして Nextcloud の Files に保存されるため、ブラウザーがある限り、どの端末でも開けます。シートは表として表示され、値・数式・表示形式・書式はページの中に書き込まれています。
 
-式は LibreOffice Calc や Excel と同じ書き方です：=SUM(B2:B5)、Sheet2.A1 または Sheet2!A1、$ による絶対参照、列全体・行全体。Calc と Excel で振る舞いが違うところは LibreOffice Calc に合わせています。計算はブラウザの中で行われ、どこにも送信されません。
+数式は LibreOffice Calc や Excel と同じ書き方です（=SUM(B2:B5)、Sheet2.A1 または Sheet2!A1、$ による絶対参照、列全体・行全体の指定）。Calc と Excel で動作が異なる場合は LibreOffice Calc に合わせています。計算はブラウザーの中で行われ、データが外部に送信されることはありません。
 
-CalcBase は、文書が素の HTML であるワードプロセッサ EditBase から派生したアプリです。無料の AI-Hub アプリを入れると、大規模言語モデル（LLM）を補助として使えます（設定はサーバー内の全アプリ分を一度に行います）。まだ若いプログラムなので、不具合が残っている可能性があります。
+CalcBase は、文書を標準の HTML で保存するワープロ EditBase から派生したアプリです。無料の AI-Hub アプリを入れると、大規模言語モデル（LLM）をアシスタントとして使えます（AI-Hub で一度設定すれば、サーバー上のすべてのアプリで使えます）。開発を始めて間もないプログラムのため、不具合が残っている可能性があります。
 
 主な機能:
-- ブックは自分のFilesの中の素のHTMLファイル ― 他のファイルと同じように編集・共有できます。版はブックの隣に保存されます
-- 複数シート・セルの結合・ウィンドウ枠の固定・列幅と行の高さ・表示形式（数値・通貨・パーセント・日付・時刻・和暦）・フォント・色・罫線・配置
-- LibreOffice Calc と同じ約500の関数：数学・統計・文字列・検索・日付と時刻・論理・情報・財務
-- CSV / TSV（UTF-8 と Shift_JIS）・ODS・XLSX の取り込み ― 値・式・表示形式・書式・列幅・結合セル・複数シート
-- CSV・ODS・XLSX への書き出し ― 式・値・表示形式・書式を保ったまま
-- RegiBase・FormulaBase・EditBase・NetBase・Tables・連絡先・カレンダー・Web ページ・Markdown からの取り込み
-- 手で整える表のためのアプリです。大量のデータ向けではありません。既定は 1 冊 10 万セル・1 シート 3 万行・1 ファイル 24 MB までで、設定で上げられます（自己責任）
-- AI-Hub アプリを通した AI アシスタント。表計算と Calc の式を知っているチャットがシートの横に出て、セルの変更を提案し、ひとつの取り消せる操作として適用します
-- 日本語と英語の画面、ライトとダークのテーマ
-- HTML5 と CSS が先。ブックはブラウザさえあれば読めます。JavaScript はそれで無理なことにだけ使います]]></description>
-	<version>0.1.0</version>
+- ブックは Files に保存される標準の HTML ファイルで、ほかのファイルと同じように編集・共有できます。バージョンはブックと同じ場所に保存されます
+- 複数のシート、セルの結合、ウィンドウ枠の固定、列の幅と行の高さ、表示形式（数値・通貨・パーセント・日付・時刻・和暦）、フォント、色、罫線、配置
+- LibreOffice Calc と同じ約500種類の関数（数学、統計、文字列、検索、日付と時刻、論理、情報、財務）
+- CSV・TSV（UTF-8 と Shift_JIS）、ODS、XLSX の取り込み。値、数式、表示形式、書式、列の幅、セルの結合、複数のシートに対応
+- CSV、ODS、XLSX への書き出し。数式、値、表示形式、書式を保持します
+- RegiBase、FormulaBase、EditBase、NetBase、Tables、連絡先、カレンダー、Web ページ、Markdown ファイルからの取り込み
+- 手入力で管理する表のためのアプリで、大量のデータの処理には向きません。既定の上限は 1ブック 10万セル、1シート 3万行、1ファイル 24 MB で、設定で引き上げられます（自己責任）
+- AI-Hub アプリを使った AI アシスタント。表計算と Calc の数式に詳しいチャットがシートの横に表示され、セルの変更を提案します。提案された変更は、1回の操作で元に戻せる形で適用されます
+- 日本語・英語の画面、ライト／ダークテーマ
+- HTML5 と CSS が基本です。ブックはブラウザーさえあれば読めます。JavaScript は HTML と CSS ではできないことにだけ使います]]></description>
+	<version>0.1.1</version>
 	<licence>agpl</licence>
 	<author>KTEC</author>
 	<namespace>CalcBase</namespace>

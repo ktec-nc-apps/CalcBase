@@ -3,6 +3,11 @@
 All notable changes to CalcBase are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] — 2026-10-11
+
+Only the Japanese text was rewritten — the README, the App Store description and the changelog — to read naturally. No feature was added or changed.
+（README・App Store の説明・変更履歴の日本語の文章を、自然な日本語に差し替えただけです。機能の追加や変更はありません。）
+
 ## [0.1.0] — 2026-10-09
 
 The first public release.
