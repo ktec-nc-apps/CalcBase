@@ -214,6 +214,10 @@ final class Model {
 			// an array formula (Ctrl+Shift+Enter): the range it fills, on the cell that holds it (§2 data-a)
 			if (is_string($cell['a'] ?? null) && ($box = Cells::parseRange(str_replace('$', '', $cell['a']))) !== null) {
 				$out['a'] = Cells::rangeName(...$box);
+				// a formula that spills (Excel's dynamic arrays): the range it filled last
+				if (!empty($cell['sp'])) {
+					$out['sp'] = 1;
+				}
 			}
 		}
 		if ($t !== null && $v !== null && !is_array($v)) {

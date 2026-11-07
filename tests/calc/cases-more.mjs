@@ -250,6 +250,26 @@ export const MORE_CASES = [
 
 /** Array formulas laid out on a sheet: every cell of each array is compared. */
 export const MORE_LAYOUTS = [
+  // LibreOffice 24.2's FOURIER and MULTIPLE.OPERATIONS (added 2026-11: the last of its functions CalcBase had left out)
+  // FOURIER is compared to 1E-13: Calc's FFT and the engine's sum (with exact twiddle factors) round differently in the last digits
+  { name: 'lo-only', tol: 1e-13, sheets: [
+    { name: 'FT', rows: [
+      [1, 0.5, 2, '', 1, 2, 3, 4, 5, A('=FOURIER(A1:A8;1)', 8, 2), '', A('=FOURIER(A1:B8;1)', 8, 2), '', A('=FOURIER(A1:B8;1;1)', 8, 2), '', A('=FOURIER(A1:A8;1;0;1)', 8, 2), '', A('=FOURIER(A1:A8;1;0;1;5)', 8, 2), '', A('=FOURIER(C1:C5;1)', 5, 2), '', A('=FOURIER(E1:I2;0)', 5, 2), '', A('=FOURIER(E1:I1;0;1;1)', 5, 2)],
+      [2, -1, -3, '', 0.5, 0, -1, 2, 1],
+      [3, 0, 4.25, '', 'x'],
+      [4, 2, 0, '', 1],
+      [0, 0, 7],
+      [-1, 1],
+      [2.5, 0],
+      [7, -2],
+      [],
+      [A('=FOURIER(A1:C8;1)', 1, 1), A('=FOURIER(E1:E4;1)', 1, 1), A('=FOURIER(E1:I3;0)', 1, 1), A('=FOURIER(A1;1)', 1, 2), '', A('=FOURIER({1;2;3;4};0)', 4, 2), '', A('=FOURIER(A1:A6;1;1;1)', 6, 2), '', A('=FOURIER(D1:D4;1)', 1, 1), A('=FOURIER({1;2;3;4};0;1)', 4, 2), '', A('=FOURIER(A1:A3;1;0;0;1)', 3, 2)],
+    ] },
+    { name: 'MO', rows: [
+      [10, '=A1*2+C1', 5, 3, '=A1*C1', '=B1+1', '=MULTIPLE.OPERATIONS(B1;A1;D1)', '=MULTIPLE.OPERATIONS(E1;A1;D1;C1;D2)', '=MULTIPLE.OPERATIONS(F1;A1;D1)', '=MULTIPLE.OPERATIONS(C1;A1;D1)', '=MULTIPLE.OPERATIONS(B1;A1;D1;C1)', '=MULTIPLE.OPERATIONS(B1;A1:A2;D1)', '=MULTIPLE.OPERATIONS(B1;C1;D2)'],
+      ['x', '=A2&"y"', '', 4, '=MULTIPLE.OPERATIONS(B2;A2;A1)', '=MULTIPLE.OPERATIONS(F1;C1;D1)', '=MULTIPLE.OPERATIONS(B1;A1;D1)+MULTIPLE.OPERATIONS(B1;A1;D2)', '=MULTIPLE.OPERATIONS(Q1;A1;D1)', '=MULTIPLE.OPERATIONS(E1;A1;D1;C1;D1)'],
+    ] },
+  ] },
   { name: 'arrays', sheets: [
     { name: 'AR', rows: [
       [1, 10, 'x', A('=A1:A3*B1:B3', 4, 2), '', A('=A1:A3+B1:B2', 3, 1), A('=SQRT(A1:A4)', 4, 1), A('=A1:A4', 4, 1), A('=IF(A1:A3>1;"y")', 3, 1), A('=COUNT(IF(A1:A3>1;A1:A3))', 1, 1), A('=SUM(IF(A1:A3>1;A1:A3))', 1, 1), A('=MID("abcdef";{1;2;3};2)', 1, 3), '', '', A('=ROW(A1:A3)', 3, 1)],

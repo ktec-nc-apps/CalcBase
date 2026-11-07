@@ -395,6 +395,11 @@
 #calcbase-root .ai-bubble.busy { color: var(--muted); }
 #calcbase-root .ai-bubble code { font-size: 12px; }
 #calcbase-root .ai-msg .did { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+#calcbase-root .ai-msg .ai-acts { font-size: 12px; margin-top: 4px; padding: 4px 8px; border-left: 3px solid var(--color-success, #2e7d32); background: var(--color-background-hover, rgba(0,0,0,.04)); border-radius: 4px; }
+#calcbase-root .ai-msg .ai-acts-h { font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+#calcbase-root .ai-msg .ai-act { line-height: 1.5; overflow-wrap: anywhere; }
+#calcbase-root .ai-msg .ai-act .mark { color: var(--color-success, #2e7d32); font-weight: 700; }
+#calcbase-root .ai-msg .ai-act.fail .mark, #calcbase-root .ai-msg .ai-act.fail { color: var(--color-error, #c62828); }
 #calcbase-root .ai-err { color: var(--danger); margin: 2px 0; }
 #calcbase-root .ai-foot { display: flex; gap: 6px; align-items: flex-end; padding: 8px; border-top: 1px solid var(--border); }
 #calcbase-root .ai-foot textarea { flex: 1 1 auto; min-height: 40px; max-height: 160px; resize: vertical; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; background: var(--surface); color: inherit; font: inherit; }

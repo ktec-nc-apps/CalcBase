@@ -58,6 +58,18 @@ $reasons = [
 				<label for="cb-ai-read-<?php p($app); ?>"><?php p($label); ?><?php if (!$there) { p(' ' . $l->t('(not installed)')); } ?></label></p>
 		<?php } ?>
 
+		<h3><?php p($l->t('The writer\'s own books')); ?></h3>
+		<?php
+		$own = [
+			'books' => $l->t('Read the writer\'s other books (their own and those shared with them)'),
+			'write' => $l->t('Make new books, write cells into books that are not open, rename books and put them in the trash bin (a version is kept before every write)'),
+		];
+		foreach ($own as $key => $label) { ?>
+			<p><input type="checkbox" class="checkbox" id="cb-ai-read-<?php p($key); ?>" data-read="<?php p($key); ?>"
+				<?php if (in_array($key, $s['read'], true)) { p('checked'); } ?>>
+				<label for="cb-ai-read-<?php p($key); ?>"><?php p($label); ?></label></p>
+		<?php } ?>
+
 		<h3><?php p($l->t('Web search')); ?></h3>
 		<p><input type="checkbox" class="checkbox" id="cb-ai-search" <?php if ($s['search']) { p('checked'); } ?> <?php if (!$off && !$tb['search']) { p('disabled'); } ?>>
 			<label for="cb-ai-search"><?php p($l->t('Let it search the web (on the AI provider\'s side: this server\'s own network is never reached)')); ?></label></p>

@@ -32,6 +32,8 @@
     DIV0: '#DIV/0!', VALUE: '#VALUE!', REF: '#REF!', NAME: '#NAME?', NA: '#N/A', NUM: '#NUM!', NULL: '#NULL!',
     CIRC: 'Err:522', PARSE: 'Err:509', PAIR: 'Err:508', MISSING: 'Err:511', ARG: 'Err:502', PARAM: 'Err:504',
     CONV: 'Err:523', SYNTAX: 'Err:520', CHAR: 'Err:501',
+    // Excel's, for its dynamic array functions: an empty answer (#CALC!), an answer with no room to spill (#SPILL!)
+    CALC: '#CALC!', SPILL: '#SPILL!',
   };
   class CalcError { constructor(code) { this.code = code; } toString() { return this.code; } }
   const fail = (code) => { throw new CalcError(code); };
@@ -1138,7 +1140,7 @@
   // Tokens keep their place in the text (s, e) so a formula can be rewritten
   // reference by reference, leaving everything else as the person wrote it.
 
-  const ERR_LIT = /^#(REF!|N\/A|NAME\?|DIV\/0!|VALUE!|NUM!|NULL!)/;
+  const ERR_LIT = /^#(REF!|N\/A|NAME\?|DIV\/0!|VALUE!|NUM!|NULL!|SPILL!|CALC!)/;
   const SHEET_PART = "(?:(\\$?)([\\p{L}_][\\p{L}\\p{N}_]*)([.!]))?";
   const CELL_PART = "(\\$?)([A-Za-z]{1,3})(\\$?)(\\d{1,7})";
   const REF_RE = new RegExp('^' + SHEET_PART + CELL_PART + '(?![\\p{L}\\p{N}_(])(?::' + SHEET_PART + CELL_PART + '(?![\\p{L}\\p{N}_(]))?', 'u');
@@ -1277,8 +1279,15 @@
     return out;
   }
 
-  const VOLATILE = new Set(['NOW', 'TODAY', 'RAND', 'RANDBETWEEN', 'OFFSET', 'INDIRECT']);
-  const FN_PREFIX = /^(COM\.MICROSOFT\.|ORG\.OPENOFFICE\.|ORG\.LIBREOFFICE\.|LEGACY\.|COM\.SUN\.STAR\.SHEET\.ADDIN\.ANALYSIS\.GET|_XLFN\.|_XLWS\.)/i;
+  const VOLATILE = new Set(['NOW', 'TODAY', 'RAND', 'RANDBETWEEN', 'OFFSET', 'INDIRECT', 'RANDARRAY', 'MULTIPLE.OPERATIONS']);
+  /**
+   * Excel's dynamic array functions: a formula that calls one is worked out as an array
+   * and its answer spills into the cells below and to the right (Excel 365), with
+   * #SPILL! when something is in the way. Other formulas keep Calc's implicit intersection.
+   */
+  const DYNAMIC = new Set(['FILTER', 'SORT', 'SORTBY', 'UNIQUE', 'SEQUENCE', 'RANDARRAY', 'VSTACK', 'HSTACK', 'TOCOL', 'TOROW', 'WRAPROWS', 'WRAPCOLS',
+    'TAKE', 'DROP', 'CHOOSEROWS', 'CHOOSECOLS', 'EXPAND', 'TEXTSPLIT', 'REGEXEXTRACT', 'XLOOKUP', 'LET']);
+  const FN_PREFIX = /^(?:COM\.MICROSOFT\.|ORG\.OPENOFFICE\.|ORG\.LIBREOFFICE\.|LEGACY\.|COM\.SUN\.STAR\.SHEET\.ADDIN\.ANALYSIS\.GET|_XLFN\.|_XLWS\.)+/i;
   /**
    * An ODS file's names that are not Calc's own with the prefix taken off (LibreOffice 24.2's
    * FormulaOpCodeMapper; the server reads a file's names so, this is for a formula that still says them).
@@ -1343,6 +1352,7 @@
           const upper = w.toUpperCase();
           const name = ODF_NAMES[upper] || upper.replace(FN_PREFIX, '');
           if (VOLATILE.has(name)) { info.volatile = true; }
+          if (DYNAMIC.has(name)) { info.dyn = true; }
           if (name === 'SUBTOTAL' || name === 'AGGREGATE') { info.sub = true; }
           const args = [];
           depth++;
@@ -1665,6 +1675,8 @@
    * written without a sheet is on the sheet of the formula, a relative one moves with the cell.
    */
   function evName(n, ctx) {
+    // a name LET gives a value (an XLSX file writes it _xlpm.x) comes before the book's names
+    if (ctx.lets) { const v = ctx.lets.get(String(n.v).replace(/^_xlpm\./i, '').toLowerCase()); if (v) { return v.get(); } }
     const e = ctx.wb.nameEntry(ctx.sheet, n.v);
     if (!e) { return fail(ERR.NAME); }
     const depth = ctx.nameDepth || 0;
@@ -4873,7 +4885,7 @@
   }
   const ERR_CODES = { '#NULL!': 521, '#DIV/0!': 532, '#VALUE!': 519, '#REF!': 524, '#NAME?': 525, '#NUM!': 503, '#N/A': 32767 };
   const errorOf = (A) => catchErr(() => { A.val(0); return null; }, (e) => e.code);
-  fx('ERROR.TYPE', 1, 1, 'value', 'The number of an error: 1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A.', (A) => { const e = errorOf(A); const n = { '#NULL!': 1, '#DIV/0!': 2, '#VALUE!': 3, '#REF!': 4, '#NAME?': 5, '#NUM!': 6, '#N/A': 7 }[e]; return n || fail(ERR.NA); });
+  fx('ERROR.TYPE', 1, 1, 'value', 'The number of an error: 1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A.', (A) => { const e = errorOf(A); const n = { '#NULL!': 1, '#DIV/0!': 2, '#VALUE!': 3, '#REF!': 4, '#NAME?': 5, '#NUM!': 6, '#N/A': 7, '#SPILL!': 9, '#CALC!': 14 }[e]; return n || fail(ERR.NA); });
   fx('INFO', 1, 1, 'type', 'Information about the environment: "system", "release", "numfile", "recalc".', (A) => {
     const t = A.str(0).toUpperCase();
     if (t === 'SYSTEM') { return 'LINUX'; }
@@ -5180,6 +5192,652 @@
     return fin(v);
   });
 
+
+  // ---- Excel 365's dynamic arrays, text splitting and regular expressions ---
+  // Not in LibreOffice 24.2: each is written from Microsoft's documentation of
+  // Excel (arguments, defaults, errors). A formula that calls one of DYNAMIC is
+  // worked out as an array and spills (Workbook.ensure). #CALC! is Excel's
+  // "the answer is an empty array"; ranges are read cell by cell, an empty cell
+  // is empty (it shows 0 where it spills, as in Excel).
+
+  /** An argument as an array: a range cell by cell (empty cells null), a value as a 1×1 array. */
+  function xArr(A, i) {
+    if (!A.has(i)) { return fail(ERR.VALUE); }
+    let v = A.arr(i);
+    if (v instanceof RefList) { if (v.areas.length !== 1) { return fail(ERR.VALUE); } v = toArray(v.areas[0], arrCtx(A.ctx)); }
+    if (isErr(v)) { throw v; }
+    return v instanceof ArrayVal ? v : new ArrayVal([[v === EMPTY_PATH ? null : v]]);
+  }
+  /** At most this many elements in an answer (16,384 × 1,048,576 is Excel's sheet; a browser holds far less). */
+  const XMAX = 4000000;
+  const xBig = (h, w) => h * w > XMAX;
+  /** A whole-number argument (truncated), or def when it is left out. */
+  const xInt = (A, i, def) => (A.has(i) ? Math.trunc(A.num(i)) : def);
+  /** A value as Excel's text functions read it: TRUE and FALSE as words, numbers as General. */
+  const xText = (v) => (typeof v === 'boolean' ? (v ? 'TRUE' : 'FALSE') : toText(v));
+  /** A 0/1 switch (match mode, case sensitivity, format …); anything else is #VALUE!. */
+  const xFlag = (A, i, max) => { const v = xInt(A, i, 0); if (v < 0 || v > (max || 1)) { return fail(ERR.VALUE); } return v; };
+  const naErr = () => new CalcError(ERR.NA);
+  /** The pad value of WRAPROWS, EXPAND, TEXTSPLIT …: #N/A unless given. */
+  const xPad = (A, i) => (A.has(i) ? A.val(i) : naErr());
+  const colsOf = (M) => { const out = []; for (let c = 0; c < M.w; c++) { out.push(M.rows.map((row) => row[c])); } return out; };
+  const fromCols = (cols) => { const h = cols.length ? cols[0].length : 0; const rows = []; for (let r = 0; r < h; r++) { rows.push(cols.map((col) => col[r])); } return new ArrayVal(rows); };
+  /** The elements of an argument read as a list, row by row (CHOOSEROWS' numbers, TEXTSPLIT's delimiters). */
+  const xList = (A, i) => { const out = []; for (const row of xArr(A, i).rows) { for (const x of row) { if (isErr(x)) { throw x; } out.push(x); } } return out; };
+
+  /**
+   * Excel's sort order: numbers, text (case ignored), FALSE, TRUE, errors; a
+   * descending sort turns that round, empty cells are last either way.
+   */
+  const xRank = (v) => (typeof v === 'number' ? 0 : typeof v === 'string' ? 1 : typeof v === 'boolean' ? 2 : 3);
+  const xColls = new Map();
+  function xColl(L) { const k = L.id === 'ja' ? 'ja' : 'en'; let c = xColls.get(k); if (!c) { c = new Intl.Collator(k, { sensitivity: 'accent' }); xColls.set(k, c); } return c; }
+  function xOrder(a, b, ord, L) {
+    if (a == null || b == null) { return a == null && b == null ? 0 : a == null ? 1 : -1; }
+    const ra = xRank(a); const rb = xRank(b);
+    let c = 0;
+    if (ra !== rb) { c = ra < rb ? -1 : 1; } else if (ra === 0) { c = a < b ? -1 : a > b ? 1 : 0; } else if (ra === 1) { c = xColl(L).compare(a, b); c = c < 0 ? -1 : c > 0 ? 1 : 0; } else if (ra === 2) { c = a === b ? 0 : a ? 1 : -1; }
+    return c * ord;
+  }
+  /** Sort the vectors (rows or columns) by keys [{ of: index → value, ord }], keeping the order of equal ones. */
+  function xSortBy(vecs, keys, L) {
+    const idx = vecs.map((v, i) => i);
+    idx.sort((p, q) => { for (const k of keys) { const c = xOrder(k.of(p), k.of(q), k.ord, L); if (c) { return c; } } return p - q; });
+    return idx.map((i) => vecs[i]);
+  }
+  const xOrd = (v) => { const n = toNum(v); if (n !== 1 && n !== -1) { return fail(ERR.VALUE); } return n; };
+
+  GRP = 'Array';
+  fx('FILTER', 2, 3, 'array; include; if empty', 'The rows (or columns) of an array that the include array marks TRUE.', (A) => {
+    const M = xArr(A, 0); const inc = xArr(A, 1);
+    let byRow;
+    if (inc.w === 1 && inc.h === M.h) { byRow = true; } else if (inc.h === 1 && inc.w === M.w) { byRow = false; } else { return fail(ERR.VALUE); }
+    const keep = [];
+    const n = byRow ? M.h : M.w;
+    for (let i = 0; i < n; i++) {
+      const x = byRow ? inc.rows[i][0] : inc.rows[0][i];
+      if (isErr(x)) { throw x; }
+      if (typeof x === 'string') { return fail(ERR.VALUE); }
+      if (x != null && x !== false && x !== 0) { keep.push(i); }
+    }
+    if (!keep.length) { return A.has(2) ? A.raw(2) : fail(ERR.CALC); }
+    return byRow ? new ArrayVal(keep.map((i) => M.rows[i].slice())) : new ArrayVal(M.rows.map((row) => keep.map((i) => row[i])));
+  });
+  fx('SORT', 1, 4, 'array; sort index; sort order; by column', 'The array sorted by one of its columns (or rows).', (A, ctx) => {
+    const M = xArr(A, 0);
+    const byCol = A.has(3) ? A.bool(3) : false;
+    const idx = A.has(1) ? xList(A, 1).map((v) => Math.trunc(toNum(v))) : [1];
+    let ord = A.has(2) ? xList(A, 2).map(xOrd) : [1];
+    const size = byCol ? M.h : M.w;
+    if (idx.some((k) => k < 1 || k > size)) { return fail(ERR.VALUE); }
+    if (ord.length === 1 && idx.length > 1) { ord = idx.map(() => ord[0]); }
+    if (ord.length !== idx.length) { return fail(ERR.VALUE); }
+    const vecs = byCol ? colsOf(M) : M.rows;
+    const out = xSortBy(vecs, idx.map((k, j) => ({ of: (p) => vecs[p][k - 1], ord: ord[j] })), ctx.L);
+    return byCol ? fromCols(out) : new ArrayVal(out.map((row) => row.slice()));
+  });
+  fx('SORTBY', 2, -1, 'array; by array 1; sort order 1; by array 2; sort order 2; …', 'The array sorted by the values of other arrays.', (A, ctx) => {
+    const M = xArr(A, 0);
+    const keys = [];
+    let dir = '';
+    for (let i = 1; i < A.n; i += 2) {
+      const B = xArr(A, i);
+      let d;
+      if (B.w === 1 && B.h === M.h) { d = 'r'; } else if (B.h === 1 && B.w === M.w) { d = 'c'; } else { return fail(ERR.VALUE); }
+      if (dir && d !== dir) { return fail(ERR.VALUE); }
+      dir = d;
+      const ord = A.has(i + 1) ? xOrd(A.val(i + 1)) : 1;
+      const vals = d === 'r' ? B.rows.map((row) => row[0]) : B.rows[0].slice();
+      keys.push({ of: (p) => vals[p], ord });
+    }
+    const vecs = dir === 'c' ? colsOf(M) : M.rows;
+    const out = xSortBy(vecs, keys, ctx.L);
+    return dir === 'c' ? fromCols(out) : new ArrayVal(out.map((row) => row.slice()));
+  });
+  /** UNIQUE's key of a value: text without case, numbers to 15 digits, errors by their code. */
+  const xKey = (v) => (v == null ? 'e' : typeof v === 'number' ? 'n' + Number(v.toPrecision(15)) : typeof v === 'string' ? 's' + v.toLowerCase() : typeof v === 'boolean' ? 'b' + v : 'x' + v.code);
+  fx('UNIQUE', 1, 3, 'array; by column; exactly once', 'The distinct rows (or columns) of an array.', (A) => {
+    const M = xArr(A, 0);
+    const byCol = A.bool(1, false); const once = A.bool(2, false);
+    const vecs = byCol ? colsOf(M) : M.rows;
+    const seen = new Map(); const order = [];
+    for (const v of vecs) { const k = v.map(xKey).join('\u0001'); const s = seen.get(k); if (s) { s.n++; } else { seen.set(k, { v, n: 1 }); order.push(k); } }
+    const out = order.map((k) => seen.get(k)).filter((s) => !once || s.n === 1).map((s) => s.v.slice());
+    if (!out.length) { return fail(ERR.CALC); }
+    return byCol ? fromCols(out) : new ArrayVal(out);
+  });
+  /** The size of SEQUENCE and RANDARRAY: a negative one is #VALUE!, an empty one #CALC!. */
+  const xSize = (h, w) => { if (h < 0 || w < 0) { return fail(ERR.VALUE); } if (!h || !w) { return fail(ERR.CALC); } if (xBig(h, w)) { return fail(ERR.NUM); } return true; };
+  fx('SEQUENCE', 1, 4, 'rows; columns; start; step', 'An array of numbers in sequence.', (A) => {
+    const h = xInt(A, 0, 1); const w = xInt(A, 1, 1); const start = A.num(2, 1); const step = A.num(3, 1);
+    xSize(h, w);
+    return new GenArray(h, w, (r, c) => start + (r * w + c) * step);
+  });
+  fx('RANDARRAY', 0, 5, 'rows; columns; min; max; whole number', 'An array of random numbers.', (A) => {
+    const h = xInt(A, 0, 1); const w = xInt(A, 1, 1); const lo = A.num(2, 0); const hi = A.num(3, 1); const whole = A.bool(4, false);
+    xSize(h, w);
+    if (lo > hi) { return fail(ERR.VALUE); }
+    if (whole && (!Number.isInteger(lo) || !Number.isInteger(hi))) { return fail(ERR.VALUE); }
+    const rows = [];
+    for (let r = 0; r < h; r++) { const row = new Array(w); for (let c = 0; c < w; c++) { row[c] = whole ? lo + Math.floor(Math.random() * (hi - lo + 1)) : lo + Math.random() * (hi - lo); } rows.push(row); }
+    return new ArrayVal(rows);
+  });
+  function xStack(A, vertical) {
+    const ms = []; for (let i = 0; i < A.n; i++) { ms.push(xArr(A, i)); }
+    const h = vertical ? ms.reduce((s, m) => s + m.h, 0) : Math.max(...ms.map((m) => m.h));
+    const w = vertical ? Math.max(...ms.map((m) => m.w)) : ms.reduce((s, m) => s + m.w, 0);
+    if (xBig(h, w)) { return fail(ERR.NUM); }
+    const rows = [];
+    if (vertical) { for (const m of ms) { for (const row of m.rows) { const x = row.slice(); while (x.length < w) { x.push(naErr()); } rows.push(x); } } } else {
+      for (let r = 0; r < h; r++) { const x = []; for (const m of ms) { for (let c = 0; c < m.w; c++) { x.push(r < m.h ? m.rows[r][c] : naErr()); } } rows.push(x); }
+    }
+    return new ArrayVal(rows);
+  }
+  fx('VSTACK', 1, -1, 'array 1; array 2; …', 'The arrays one below the other.', (A) => xStack(A, true));
+  fx('HSTACK', 1, -1, 'array 1; array 2; …', 'The arrays side by side.', (A) => xStack(A, false));
+  function xFlat(A) {
+    const M = xArr(A, 0);
+    const ignore = xInt(A, 1, 0); const byCol = A.bool(2, false);
+    if (ignore < 0 || ignore > 3) { return fail(ERR.VALUE); }
+    const out = [];
+    for (const vec of byCol ? colsOf(M) : M.rows) { for (const x of vec) { if ((ignore & 1 && x == null) || (ignore & 2 && isErr(x))) { continue; } out.push(x); } }
+    if (!out.length) { return fail(ERR.CALC); }
+    return out;
+  }
+  fx('TOCOL', 1, 3, 'array; ignore; scan by column', 'The array as one column (1 ignores empty cells, 2 errors, 3 both).', (A) => new ArrayVal(xFlat(A).map((x) => [x])));
+  fx('TOROW', 1, 3, 'array; ignore; scan by column', 'The array as one row (1 ignores empty cells, 2 errors, 3 both).', (A) => new ArrayVal([xFlat(A)]));
+  function xWrap(A, byRows) {
+    const M = xArr(A, 0);
+    if (M.h > 1 && M.w > 1) { return fail(ERR.VALUE); }
+    const list = M.h === 1 ? M.rows[0] : M.rows.map((row) => row[0]);
+    const n = xInt(A, 1, 0);
+    if (n < 1) { return fail(ERR.NUM); }
+    const pad = xPad(A, 2);
+    const k = Math.ceil(list.length / n);
+    if (xBig(k, n)) { return fail(ERR.NUM); }
+    const vecs = [];
+    for (let i = 0; i < k; i++) { const v = list.slice(i * n, i * n + n); while (v.length < n) { v.push(pad); } vecs.push(v); }
+    return byRows ? new ArrayVal(vecs) : fromCols(vecs);
+  }
+  fx('WRAPROWS', 2, 3, 'vector; wrap count; pad with', 'A row or column wrapped into rows of a length.', (A) => xWrap(A, true));
+  fx('WRAPCOLS', 2, 3, 'vector; wrap count; pad with', 'A row or column wrapped into columns of a length.', (A) => xWrap(A, false));
+  /** The part of 0 … n-1 that TAKE (k first, -k last) or DROP leaves; null for none. */
+  function xSpan(n, k, drop) {
+    if (k == null) { return [0, n]; }
+    if (drop) { if (Math.abs(k) >= n) { return null; } return k >= 0 ? [k, n] : [0, n + k]; }
+    if (k === 0) { return null; }
+    return k > 0 ? [0, Math.min(k, n)] : [Math.max(0, n + k), n];
+  }
+  function xTakeDrop(A, drop) {
+    const M = xArr(A, 0);
+    const rs = xSpan(M.h, A.has(1) ? Math.trunc(A.num(1)) : null, drop); const cs = xSpan(M.w, A.has(2) ? Math.trunc(A.num(2)) : null, drop);
+    if (!rs || !cs) { return fail(ERR.CALC); }
+    return new ArrayVal(M.rows.slice(rs[0], rs[1]).map((row) => row.slice(cs[0], cs[1])));
+  }
+  fx('TAKE', 2, 3, 'array; rows; columns', 'The first (or, negative, the last) rows and columns of an array.', (A) => xTakeDrop(A, false));
+  fx('DROP', 2, 3, 'array; rows; columns', 'The array without its first (or, negative, its last) rows and columns.', (A) => xTakeDrop(A, true));
+  function xChoose(A, rows) {
+    const M = xArr(A, 0);
+    const n = rows ? M.h : M.w;
+    const pick = [];
+    for (let i = 1; i < A.n; i++) {
+      for (const x of xList(A, i)) {
+        let k = Math.trunc(toNum(x));
+        if (k < 0) { k = n + k + 1; }
+        if (k < 1 || k > n) { return fail(ERR.VALUE); }
+        pick.push(k - 1);
+      }
+    }
+    return rows ? new ArrayVal(pick.map((k) => M.rows[k].slice())) : new ArrayVal(M.rows.map((row) => pick.map((k) => row[k])));
+  }
+  fx('CHOOSEROWS', 2, -1, 'array; row 1; row 2; …', 'The rows of an array at the numbers given (negative from the end).', (A) => xChoose(A, true));
+  fx('CHOOSECOLS', 2, -1, 'array; column 1; column 2; …', 'The columns of an array at the numbers given (negative from the end).', (A) => xChoose(A, false));
+  fx('EXPAND', 2, 4, 'array; rows; columns; pad with', 'The array made larger, the new places filled.', (A) => {
+    const M = xArr(A, 0);
+    const h = A.has(1) ? Math.trunc(A.num(1)) : M.h; const w = A.has(2) ? Math.trunc(A.num(2)) : M.w;
+    if (h < M.h || w < M.w) { return fail(ERR.VALUE); }
+    if (xBig(h, w)) { return fail(ERR.NUM); }
+    const pad = xPad(A, 3);
+    const rows = [];
+    for (let r = 0; r < h; r++) { const row = []; for (let c = 0; c < w; c++) { row.push(r < M.h && c < M.w ? M.rows[r][c] : pad); } rows.push(row); }
+    return new ArrayVal(rows);
+  });
+
+  GRP = 'Text';
+  /** Delimiters: a text or an array of texts (none when the argument is left out). */
+  const xDelims = (A, i) => (A.has(i) ? xList(A, i).map(xText) : []);
+  /** The length of the first of the delimiters (in their order) found at position i of text (-1 when none is). */
+  function delimAt(text, i, delims, fold, limit) {
+    for (const d of delims) {
+      if (i + d.length <= limit && (fold ? text.substr(i, d.length).toLowerCase() === d.toLowerCase() : text.startsWith(d, i))) { return d.length; }
+    }
+    return -1;
+  }
+  fx('TEXTSPLIT', 2, 6, 'text; column delimiter; row delimiter; ignore empty; match mode; pad with', 'Text split into columns (and rows) at delimiters.', (A) => {
+    const text = xText(A.val(0));
+    // an empty delimiter splits nothing; an empty text is #VALUE!
+    const cd = xDelims(A, 1).filter((d) => d !== ''); const rd = xDelims(A, 2).filter((d) => d !== '');
+    if (text === '') { return fail(ERR.VALUE); }
+    const ignore = A.bool(3, false); const fold = xFlag(A, 4) === 1; const pad = xPad(A, 5);
+    let rows = [[]];
+    let start = 0; let i = 0;
+    while (i < text.length) {
+      const lr = delimAt(text, i, rd, fold, text.length); const lc = delimAt(text, i, cd, fold, text.length);
+      if (lr > 0 && lr >= lc) { rows[rows.length - 1].push(text.slice(start, i)); rows.push([]); i += lr; start = i; continue; }
+      if (lc > 0) { rows[rows.length - 1].push(text.slice(start, i)); i += lc; start = i; continue; }
+      i++;
+    }
+    rows[rows.length - 1].push(text.slice(start));
+    if (ignore) { rows = rows.map((row) => row.filter((x) => x !== '')).filter((row) => row.length); if (!rows.length) { return fail(ERR.CALC); } }
+    const w = Math.max(...rows.map((row) => row.length));
+    return new ArrayVal(rows.map((row) => { const x = row.slice(); while (x.length < w) { x.push(pad); } return x; }));
+  });
+  /** TEXTBEFORE and TEXTAFTER: where the n-th delimiter is (from the end when n is negative). */
+  function textAround(A, after) {
+    const text = xText(A.val(0));
+    const delims = A.has(1) ? xDelims(A, 1) : [''];
+    const n = xInt(A, 2, 1); const fold = xFlag(A, 3) === 1; const atEnd = xFlag(A, 4) === 1;
+    if (text === '') { return ''; }
+    if (n === 0 || Math.abs(n) > text.length) { return fail(ERR.VALUE); }
+    let s = -1; let e = -1; let count = 0;
+    if (n > 0) {
+      for (let i = 0; i <= text.length;) {
+        const len = delimAt(text, i, delims, fold, text.length);
+        if (len < 0) { i++; continue; }
+        if (++count === n) { s = i; e = i + len; break; }
+        i += Math.max(len, 1);
+      }
+      if (s < 0 && atEnd && count === n - 1) { s = e = text.length; }
+    } else {
+      let limit = text.length;
+      for (let i = text.length; i >= 0;) {
+        const len = delimAt(text, i, delims, fold, limit);
+        if (len < 0) { i--; continue; }
+        if (++count === -n) { s = i; e = i + len; break; }
+        limit = i; i = len > 0 ? i - 1 : i - 1;
+      }
+      if (s < 0 && atEnd && count === -n - 1) { s = e = 0; }
+    }
+    if (s < 0) { return A.has(5) ? A.raw(5) : fail(ERR.NA); }
+    return after ? text.slice(e) : text.slice(0, s);
+  }
+  fx('TEXTBEFORE', 2, 6, 'text; delimiter; instance; match mode; match end; if not found', 'The text before a delimiter.', (A) => textAround(A, false));
+  fx('TEXTAFTER', 2, 6, 'text; delimiter; instance; match mode; match end; if not found', 'The text after a delimiter.', (A) => textAround(A, true));
+  /** A value as VALUETOTEXT and ARRAYTOTEXT write it; strict puts text in quotes. */
+  const valueText = (v, strict) => (isErr(v) ? v.code : v == null ? '' : typeof v === 'string' ? (strict ? '"' + v.replace(/"/g, '""') + '"' : v) : xText(v));
+  fx('VALUETOTEXT', 1, 2, 'value; format', 'A value as text (1: text in quotes).', (A) => {
+    const strict = xFlag(A, 1) === 1;
+    const v = catchErr(() => A.val(0), (e) => e);
+    return valueText(v, strict);
+  });
+  fx('ARRAYTOTEXT', 1, 2, 'array; format', 'An array as text (1: as an array constant).', (A) => {
+    const strict = xFlag(A, 1) === 1;
+    const M = xArr(A, 0);
+    if (strict) { return '{' + M.rows.map((row) => row.map((x) => valueText(x, true)).join(',')).join(';') + '}'; }
+    return M.rows.map((row) => row.map((x) => valueText(x, false)).join(', ')).join(', ');
+  });
+
+  // Regular expressions: Excel reads them as PCRE2 does. They are turned into
+  // JavaScript's, construct by construct; what JavaScript cannot do the same
+  // way (atomic groups, possessive quantifiers, recursion, \K, inline flags
+  // after the start …) is #VALUE!, never a different match.
+  const PCRE_CACHE = new Map();
+  const PCRE_SPACE = '\\t\\n\\x0B\\f\\r ';
+  const PCRE_POSIX = {
+    alpha: 'A-Za-z', digit: '0-9', alnum: 'A-Za-z0-9', upper: 'A-Z', lower: 'a-z', space: PCRE_SPACE, blank: '\\t ', word: 'A-Za-z0-9_',
+    xdigit: '0-9A-Fa-f', punct: '!-\\/:-@\\[-`{-~', cntrl: '\\x00-\\x1F\\x7F', print: ' -~', graph: '!-~', ascii: '\\x00-\\x7F',
+  };
+  const PCRE_GC = /^(?:L|Lu|Ll|Lt|Lm|Lo|LC|M|Mn|Mc|Me|N|Nd|Nl|No|P|Pc|Pd|Ps|Pe|Pi|Pf|Po|S|Sm|Sc|Sk|So|Z|Zs|Zl|Zp|C|Cc|Cf|Cs|Co|Cn|Any)$/;
+  const hexEsc = (cp) => '\\u{' + cp.toString(16) + '}';
+  function pcre(pattern, caseless) {
+    const key = (caseless ? 'i' : 'c') + pattern;
+    let hit = PCRE_CACHE.get(key);
+    if (hit) { return hit; }
+    const bad = () => fail(ERR.VALUE);
+    let src = String(pattern);
+    let flags = { i: !!caseless, m: false, s: false, x: false };
+    // (?imsx) at the very start sets the options for the whole pattern
+    let lead;
+    while ((lead = /^\(\?([imsx]*)(?:-([imsx]*))?\)/.exec(src)) && lead[0] !== '(?)') {
+      for (const f of lead[1]) { flags[f] = true; }
+      for (const f of lead[2] || '') { flags[f] = false; }
+      src = src.slice(lead[0].length);
+    }
+    let out = '';
+    let i = 0;
+    let groups = 0;
+    const names = [];
+    const n = src.length;
+    // a code point and how many UTF-16 units it takes
+    const cpAt = (k) => src.codePointAt(k);
+    const width = (cp) => (cp > 0xFFFF ? 2 : 1);
+    /** An escape \x…: [JavaScript text, units consumed]; inClass for a character class. */
+    function escape(k, inClass) {
+      const c = src[k + 1];
+      if (c === undefined) { return bad(); }
+      const cp = cpAt(k + 1);
+      if (!/[A-Za-z0-9]/.test(c)) { return [hexEsc(cp), 1 + width(cp)]; }
+      switch (c) {
+        case 'd': case 'D': case 'w': case 'W': return ['\\' + c, 2];
+        case 's': return [inClass ? PCRE_SPACE : '[' + PCRE_SPACE + ']', 2];
+        case 'S': return [inClass ? '\\x00-\\x08\\x0E-\\x1F\\x21-\\u{10FFFF}' : '[^' + PCRE_SPACE + ']', 2];
+        case 'h': return [(inClass ? '' : '[') + '\\t \\xA0\\u1680\\u180E\\u2000-\\u200A\\u202F\\u205F\\u3000' + (inClass ? '' : ']'), 2];
+        case 'H': if (inClass) { return bad(); } return ['[^\\t \\xA0\\u1680\\u180E\\u2000-\\u200A\\u202F\\u205F\\u3000]', 2];
+        case 'v': return [(inClass ? '' : '[') + '\\n\\x0B\\f\\r\\x85\\u2028\\u2029' + (inClass ? '' : ']'), 2];
+        case 'V': if (inClass) { return bad(); } return ['[^\\n\\x0B\\f\\r\\x85\\u2028\\u2029]', 2];
+        case 'R': if (inClass) { return bad(); } return ['(?:\\r\\n|[\\n\\x0B\\f\\r\\x85\\u2028\\u2029])', 2];
+        case 'N': if (inClass) { return bad(); } return ['[^\\n]', 2];
+        case 'n': case 'r': case 't': case 'f': return ['\\' + c, 2];
+        case 'e': return ['\\x1B', 2];
+        case 'a': return ['\\x07', 2];
+        case 'b': return [inClass ? '\\x08' : '\\b', 2];
+        case 'B': if (inClass) { return bad(); } return ['\\B', 2];
+        case 'A': if (inClass) { return bad(); } return ['(?<![\\s\\S])', 2];
+        case 'z': if (inClass) { return bad(); } return ['(?![\\s\\S])', 2];
+        case 'Z': if (inClass) { return bad(); } return ['(?=\\n?(?![\\s\\S]))', 2];
+        case 'c': { const x = src[k + 2]; if (!x || !/[A-Za-z]/.test(x)) { return bad(); } return ['\\c' + x.toUpperCase(), 3]; }
+        case 'x': {
+          if (src[k + 2] === '{') { const m = /^\{([0-9A-Fa-f]+)\}/.exec(src.slice(k + 2)); if (!m) { return bad(); } const v = parseInt(m[1], 16); if (v > 0x10FFFF) { return bad(); } return [hexEsc(v), 2 + m[0].length]; }
+          const m = /^[0-9A-Fa-f]{0,2}/.exec(src.slice(k + 2)); return [hexEsc(m[0] ? parseInt(m[0], 16) : 0), 2 + m[0].length];
+        }
+        case 'o': { const m = /^\{([0-7]+)\}/.exec(src.slice(k + 2)); if (!m) { return bad(); } return [hexEsc(parseInt(m[1], 8)), 2 + m[0].length]; }
+        case 'p': case 'P': {
+          let name; let len;
+          if (src[k + 2] === '{') { const m = /^\{(\^?)([A-Za-z_&]+)\}/.exec(src.slice(k + 2)); if (!m) { return bad(); } name = (m[1] ? '^' : '') + m[2]; len = 2 + m[0].length; } else { name = src[k + 2] || ''; len = 3; if (!/[A-Za-z]/.test(name)) { return bad(); } }
+          let neg = c === 'P';
+          if (name[0] === '^') { neg = !neg; name = name.slice(1); }
+          if (name === 'L&') { name = 'LC'; }
+          const prop = PCRE_GC.test(name) ? name : 'Script=' + name;
+          try { new RegExp('\\p{' + prop + '}', 'u'); } catch (e) { return bad(); }
+          return ['\\' + (neg ? 'P' : 'p') + '{' + prop + '}', len];
+        }
+        case 'g': case 'k': {
+          if (inClass) { return bad(); }
+          const m = /^(?:\{(-?\d+|[A-Za-z_]\w*)\}|<([A-Za-z_]\w*)>|'([A-Za-z_]\w*)'|(\d+))/.exec(src.slice(k + 2));
+          if (!m) { return bad(); }
+          const ref = m[1] || m[2] || m[3] || m[4];
+          if (/^-?\d+$/.test(ref)) { if (c === 'k') { return bad(); } let num = Number(ref); if (num < 0) { num = groups + 1 + num; } if (num < 1) { return bad(); } return ['\\' + num, 2 + m[0].length]; }
+          return ['\\k<' + ref + '>', 2 + m[0].length];
+        }
+        default:
+          if (/[0-9]/.test(c)) {
+            const m = /^[0-9]+/.exec(src.slice(k + 1))[0];
+            // \0, \012: octal; \1 … \9 and more digits (when there are so many groups): a back reference
+            if (!inClass && c !== '0' && (m.length === 1 || Number(m) <= countGroups())) { return ['(?:\\' + Number(m) + ')', 1 + m.length]; }
+            const oct = /^[0-7]{1,3}/.exec(src.slice(k + 1));
+            if (!oct) { return bad(); }
+            return [hexEsc(parseInt(oct[0], 8)), 1 + oct[0].length];
+          }
+          return bad();
+      }
+    }
+    let totalGroups = null;
+    function countGroups() {
+      if (totalGroups != null) { return totalGroups; }
+      let t = 0; let inC = false;
+      for (let k = 0; k < n; k++) { const ch = src[k]; if (ch === '\\') { k++; continue; } if (inC) { if (ch === ']') { inC = false; } continue; } if (ch === '[') { inC = true; if (src[k + 1] === ']') { k++; } continue; } if (ch === '(' && (src[k + 1] !== '?' || /^\(\?(?:P?<[A-Za-z_]|')/.test(src.slice(k)))) { t++; } }
+      totalGroups = t;
+      return t;
+    }
+    /** A quantifier's {…}: the text when it is one, null when the brace is a literal. */
+    const braceQuant = (k) => { const m = /^\{(\d+)(,(\d*))?\}/.exec(src.slice(k)); return m ? m[0] : null; };
+    let canQuantify = false;
+    while (i < n) {
+      const ch = src[i];
+      if (flags.x && /\s/.test(ch)) { i++; continue; }
+      if (flags.x && ch === '#') { while (i < n && src[i] !== '\n') { i++; } continue; }
+      if (ch === '\\') {
+        if (src[i + 1] === 'Q') { const end = src.indexOf('\\E', i + 2); const lit = end < 0 ? src.slice(i + 2) : src.slice(i + 2, end); for (const x of lit) { out += hexEsc(x.codePointAt(0)); } i = end < 0 ? n : end + 2; canQuantify = lit.length > 0; continue; }
+        if (src[i + 1] === 'E') { i += 2; continue; }
+        if (/[KGXCLlUu]/.test(src[i + 1] || '')) { return bad(); }
+        const [js, len] = escape(i, false);
+        out += js; i += len; canQuantify = !/^\\[bB]$|^\(\?<!|^\(\?!|^\(\?=/.test(js); continue;
+      }
+      if (ch === '[') {
+        // a character class: ] first is a literal, POSIX names inside
+        let k = i + 1; let cls = '[';
+        if (src[k] === '^') { cls += '^'; k++; }
+        if (src[k] === ']') { cls += '\\]'; k++; }
+        for (;;) {
+          if (k >= n) { return bad(); }
+          const c = src[k];
+          if (c === ']') { k++; break; }
+          if (c === '[' && src[k + 1] === ':') {
+            const m = /^\[:(\^?)([a-z]+):\]/.exec(src.slice(k));
+            if (!m || m[1] || !PCRE_POSIX[m[2]]) { return bad(); }
+            cls += PCRE_POSIX[m[2]]; k += m[0].length; continue;
+          }
+          if (c === '\\') {
+            if (src[k + 1] === 'Q') { const end = src.indexOf('\\E', k + 2); const lit = end < 0 ? src.slice(k + 2) : src.slice(k + 2, end); for (const x of lit) { cls += hexEsc(x.codePointAt(0)); } k = end < 0 ? n : end + 2; continue; }
+            if (src[k + 1] === 'E') { k += 2; continue; }
+            const [js, len] = escape(k, true); cls += js; k += len; continue;
+          }
+          if (c === '[' || c === '/' || c === '{' || c === '}' || c === '(' || c === ')' || c === '|' || c === '.' || c === '*' || c === '+' || c === '?' || c === '$') { cls += '\\' + c; k++; continue; }
+          if (flags.x && /\s/.test(c)) { cls += hexEsc(c.codePointAt(0)); k++; continue; }
+          const cp = cpAt(k); cls += String.fromCodePoint(cp); k += width(cp);
+        }
+        out += cls + ']'; i = k; canQuantify = true; continue;
+      }
+      if (ch === '(') {
+        if (src[i + 1] === '*') { return bad(); }
+        if (src[i + 1] !== '?') { groups++; out += '('; i++; canQuantify = false; continue; }
+        const rest = src.slice(i);
+        let m;
+        if ((m = /^\(\?#[^)]*\)/.exec(rest))) { i += m[0].length; continue; }
+        if (/^\(\?(?:[:=!]|<[=!])/.test(rest)) { const t = rest.slice(0, rest[2] === '<' ? 4 : 3); out += t; i += t.length; canQuantify = false; continue; }
+        if ((m = /^\(\?(?:P?<([A-Za-z_]\w*)>|'([A-Za-z_]\w*)')/.exec(rest))) { const nm = m[1] || m[2]; if (names.indexOf(nm) >= 0) { return bad(); } names.push(nm); groups++; out += '(?<' + nm + '>'; i += m[0].length; canQuantify = false; continue; }
+        if ((m = /^\(\?P=([A-Za-z_]\w*)\)/.exec(rest))) { out += '\\k<' + m[1] + '>'; i += m[0].length; canQuantify = true; continue; }
+        return bad();
+      }
+      if (ch === ')') { out += ')'; i++; canQuantify = true; continue; }
+      if (ch === '*' || ch === '+' || ch === '?') {
+        if (!canQuantify) { return bad(); }
+        out += ch; i++;
+        if (src[i] === '+') { return bad(); }
+        if (src[i] === '?') { out += '?'; i++; }
+        canQuantify = false; continue;
+      }
+      if (ch === '{') {
+        const q = braceQuant(i);
+        if (q) { if (!canQuantify) { return bad(); } out += q; i += q.length; if (src[i] === '+') { return bad(); } if (src[i] === '?') { out += '?'; i++; } canQuantify = false; continue; }
+        if (/^\{\s*,/.test(src.slice(i))) { return bad(); }
+        out += '\\{'; i++; canQuantify = true; continue;
+      }
+      if (ch === '}' || ch === ']' || ch === '/') { out += '\\' + ch; i++; canQuantify = true; continue; }
+      if (ch === '.') { out += flags.s ? '[\\s\\S]' : '[^\\n]'; i++; canQuantify = true; continue; }
+      if (ch === '^') { out += flags.m ? '(?:(?<![\\s\\S])|(?<=\\n)(?=[\\s\\S]))' : '(?<![\\s\\S])'; i++; canQuantify = false; continue; }
+      if (ch === '$') { out += flags.m ? '(?=\\n|(?![\\s\\S]))' : '(?=\\n?(?![\\s\\S]))'; i++; canQuantify = false; continue; }
+      if (ch === '|') { out += '|'; i++; canQuantify = false; continue; }
+      const cp = cpAt(i);
+      out += cp < 128 ? ch : String.fromCodePoint(cp); i += width(cp); canQuantify = true;
+    }
+    let re;
+    try { re = new RegExp(out, 'gu' + (flags.i ? 'i' : '')); } catch (e) { return bad(); }
+    hit = { re, src: out, i: flags.i, groups: countGroups(), names };
+    if (PCRE_CACHE.size > 200) { PCRE_CACHE.clear(); }
+    PCRE_CACHE.set(key, hit);
+    return hit;
+  }
+  /**
+   * Every match of a pattern in a text, as PCRE2 walks them: after an empty
+   * match a non-empty one starting at the same place is tried first, then the
+   * search moves on one character.
+   */
+  function pcreMatches(P, text, limit) {
+    const re = P.re;
+    const out = [];
+    let pos = 0; let afterEmpty = false;
+    for (;;) {
+      let m;
+      if (afterEmpty) {
+        const k = Array.from(text.slice(0, pos)).length + 1;
+        const ne = new RegExp('(?:' + P.src + ')(?<=^[\\s\\S]{' + k + ',})', 'yu' + (P.i ? 'i' : ''));
+        ne.lastIndex = pos;
+        m = ne.exec(text);
+        if (!m) { if (pos >= text.length) { break; } pos += text.codePointAt(pos) > 0xFFFF ? 2 : 1; afterEmpty = false; continue; }
+      } else {
+        re.lastIndex = pos;
+        m = re.exec(text);
+        if (!m) { break; }
+      }
+      out.push(m);
+      if (limit && out.length >= limit) { break; }
+      pos = m.index + m[0].length; afterEmpty = m[0] === '';
+    }
+    return out;
+  }
+  const caseArg = (A, i) => xFlag(A, i) === 1;
+  fx('REGEXTEST', 2, 3, 'text; pattern; case sensitivity', 'TRUE when the text matches a regular expression.', (A) => {
+    const text = xText(A.val(0)); const P = pcre(A.str(1), caseArg(A, 2));
+    return pcreMatches(P, text, 1).length > 0;
+  });
+  fx('REGEXEXTRACT', 2, 4, 'text; pattern; return mode; case sensitivity', 'The text a regular expression matches (1: every match, 2: the groups of the first).', (A) => {
+    const text = xText(A.val(0)); const mode = xFlag(A, 2, 2); const P = pcre(A.str(1), caseArg(A, 3));
+    const ms = pcreMatches(P, text, mode === 1 ? 0 : 1);
+    if (!ms.length) { return fail(ERR.NA); }
+    if (mode === 0) { return ms[0][0]; }
+    if (mode === 1) { return new ArrayVal([ms.map((m) => m[0])]); }
+    if (ms[0].length < 2) { return fail(ERR.NA); }
+    return new ArrayVal([ms[0].slice(1).map((g) => (g == null ? '' : g))]);
+  });
+  /** A PCRE2 replacement: $n, ${n}, ${name} and $$; anything else after $ is #VALUE!. */
+  function pcreReplacement(rep, P) {
+    const parts = [];
+    let lit = '';
+    for (let i = 0; i < rep.length; i++) {
+      const ch = rep[i];
+      if (ch !== '$') { lit += ch; continue; }
+      const rest = rep.slice(i + 1);
+      let m;
+      if (rest[0] === '$') { lit += '$'; i++; continue; }
+      if ((m = /^\d+/.exec(rest)) || (m = /^\{(\d+)\}/.exec(rest))) { const g = Number(m[1] || m[0]); if (g > P.groups) { return fail(ERR.VALUE); } parts.push(lit, g); lit = ''; i += m[0].length; continue; }
+      if ((m = /^\{([A-Za-z_]\w*)\}/.exec(rest))) { if (P.names.indexOf(m[1]) < 0) { return fail(ERR.VALUE); } parts.push(lit, m[1]); lit = ''; i += m[0].length; continue; }
+      return fail(ERR.VALUE);
+    }
+    parts.push(lit);
+    return (m) => parts.map((p, k) => (k % 2 === 0 ? p : typeof p === 'number' ? (m[p] == null ? '' : m[p]) : ((m.groups && m.groups[p]) == null ? '' : m.groups[p]))).join('');
+  }
+  fx('REGEXREPLACE', 3, 5, 'text; pattern; replacement; occurrence; case sensitivity', 'The text with what a regular expression matches replaced (occurrence 0: every one).', (A) => {
+    const text = xText(A.val(0)); const P = pcre(A.str(1), caseArg(A, 4));
+    const make = pcreReplacement(A.str(2), P);
+    const occ = xInt(A, 3, 0);
+    const ms = pcreMatches(P, text, 0);
+    let pick = null;
+    if (occ !== 0) { const k = occ > 0 ? occ - 1 : ms.length + occ; if (k < 0 || k >= ms.length) { return text; } pick = ms[k]; }
+    let out = ''; let at = 0;
+    for (const m of ms) { if (pick && m !== pick) { continue; } out += text.slice(at, m.index) + make(m); at = m.index + m[0].length; }
+    return out + text.slice(at);
+  });
+
+  GRP = 'Logical';
+  fx('LET', 3, -1, 'name 1; value 1; name 2; value 2; …; calculation', 'Gives values names and works out a calculation with them.', (A, ctx) => {
+    if (A.n % 2 === 0) { return fail(ERR.MISSING); }
+    const lets = new Map(ctx.lets || []);
+    const own = new Set();
+    for (let i = 0; i + 1 < A.n; i += 2) {
+      const node = A.nodes[i];
+      const nm = node.k === 'name' ? String(node.v).replace(/^_xlpm\./i, '') : '';
+      if (!nm || !validName(nm) || own.has(nm.toLowerCase())) { return fail(ERR.NAME); }
+      const key = nm.toLowerCase();
+      own.add(key);
+      // a value is worked out once, when it is first read, with the names before it
+      const at = Object.assign({}, ctx, { lets: new Map(lets), arrView: undefined });
+      const vnode = A.nodes[i + 1];
+      let done = false; let val;
+      lets.set(key, { get() { if (!done) { try { val = ev(vnode, at); } catch (e) { if (!isErr(e)) { throw e; } val = new Thrown(e); } done = true; } if (val instanceof Thrown) { throw val.e; } return val; } });
+    }
+    return ev(A.nodes[A.n - 1], Object.assign({}, ctx, { lets, arrView: undefined }));
+  });
+
+  GRP = 'Mathematical';
+  /** PERCENTOF's sums as Excel's SUM reads them: numbers only from ranges and arrays, a value typed in as a number. */
+  function xSum(A, i) {
+    const node = A.nodes[i];
+    if (node.k === 'empty') { return 0; }
+    const v = A.arr(i);
+    const s = new KSum();
+    if (v instanceof ArrayVal) { for (const row of v.rows) { for (const x of row) { if (isErr(x)) { throw x; } if (typeof x === 'number') { s.add(x); } } } return s.value; }
+    if (v instanceof RefList) { for (const a of v.areas) { const m = toArray(a, arrCtx(A.ctx)); for (const row of m.rows) { for (const x of row) { if (isErr(x)) { throw x; } if (typeof x === 'number') { s.add(x); } } } } return s.value; }
+    if (isErr(v)) { throw v; }
+    return toNum(v, A.L);
+  }
+  fx('PERCENTOF', 2, 2, 'data subset; data all', 'The sum of a subset as a part of the sum of all.', (A) => {
+    const part = xSum(A, 0); const all = xSum(A, 1);
+    if (all === 0) { return fail(ERR.DIV0); }
+    return part / all;
+  });
+
+  // ---- LibreOffice 24.2's own that were left out --------------------------
+
+  GRP = 'Array';
+  /**
+   * cos and sin of π·u/n for a whole u in [0, 2n), worked out from the first
+   * octant so that angles that are equal by symmetry give equal values (sin π is 0, not 1.2E-16).
+   */
+  function cisPi(u, n) {
+    if (u > n) { const [c, si] = cisPi(2 * n - u, n); return [c, -si]; }
+    if (2 * u > n) { const [c, si] = cisPi(n - u, n); return [-c, si]; }
+    if (4 * u > n) { const v = n - 2 * u; return [Math.sin((Math.PI * v) / (2 * n)), Math.cos((Math.PI * v) / (2 * n))]; }
+    return [Math.cos((Math.PI * u) / n), Math.sin((Math.PI * u) / n)];
+  }
+  /** FOURIER as Calc's ScFourier: a column (or row) of real parts, and of imaginary parts when there are two. */
+  fx('FOURIER', 2, 5, 'array; grouped by columns; inverse; polar; minimum magnitude', 'The discrete Fourier transform of a list of complex numbers.', (A) => {
+    const minMag = A.num(4, 0); const polar = A.bool(3, false); const inverse = A.bool(2, false); const byCol = A.bool(1);
+    const M = A.matrix(0);
+    if ((byCol && M.w > 2) || (!byCol && M.h > 2)) { return fail(ERR.ARG); }
+    for (const row of M.rows) { for (const x of row) { if (isErr(x)) { throw x; } if (typeof x !== 'number') { return fail(ERR.VALUE); } } }
+    const n = byCol ? M.h : M.w;
+    const re = []; const im = [];
+    for (let i = 0; i < n; i++) { re.push(byCol ? M.rows[i][0] : M.rows[0][i]); im.push((byCol ? M.w : M.h) > 1 ? (byCol ? M.rows[i][1] : M.rows[1][i]) : 0); }
+    const sign = inverse ? 1 : -1;
+    const out = [];
+    for (let k = 0; k < n; k++) {
+      const sr = new KSum(); const si = new KSum();
+      for (let j = 0; j < n; j++) {
+        const [c, sn] = cisPi(2 * ((k * j) % n), n); const s = sign * sn;
+        sr.add(re[j] * c - im[j] * s); si.add(re[j] * s + im[j] * c);
+      }
+      let x = sr.value; let y = si.value;
+      if (inverse) { x /= n; y /= n; }
+      if (polar) { let mag = Math.sqrt(x * x + y * y); let ph = Math.atan2(y, x); if (mag < minMag) { mag = 0; ph = 0; } out.push([mag, ph]); } else { out.push([x, y]); }
+    }
+    return new ArrayVal(out);
+  });
+
+  GRP = 'Lookup';
+  /**
+   * MULTIPLE.OPERATIONS as Calc's ScTableOp: the formula cell worked out again
+   * with the value of a replacement cell put in for a cell it reads (directly
+   * or through other formulas), for a what-if table. All arguments are cells.
+   */
+  fx('MULTIPLE.OPERATIONS', 3, 5, 'formula; column cell; row replacement; row cell; column replacement', 'A formula worked out with the values of other cells put in for cells it reads (a what-if table).', (A, ctx) => {
+    if (A.n === 4) { return fail(ERR.PARAM); }
+    const cellArg = (i) => { const v = A.raw(i); if (v instanceof RangeVal && v.single) { return v; } if (isErr(v)) { throw v; } return fail(ERR.PARAM); };
+    const f = cellArg(0);
+    const subs = [];
+    for (let i = 1; i + 1 < A.n; i += 2) { const old = cellArg(i); const nw = cellArg(i + 1); subs.push({ old, v: ctx.cellValue(nw.sheet, nw.r0, nw.c0) }); }
+    const memo = new Map();
+    let depth = 0;
+    const read = (target, r, c) => {
+      for (const s of subs) { if (target === s.old.sheet && r === s.old.r0 && c === s.old.c0) { return s.v; } }
+      const cell = target.cells.get(r * MAXC + c);
+      if (!cell || !cell.f || !cell.ast || cell.err || cell.arr || cell.spill) { return ctx.cellValue(target, r, c); }
+      const k = target.id + ':' + (r * MAXC + c);
+      if (memo.has(k)) { return memo.get(k); }
+      if (depth > NEST) { return new CalcError(ERR.CIRC); }
+      memo.set(k, new CalcError(ERR.CIRC));
+      depth++;
+      let v;
+      try { v = ev(cell.ast, Object.assign({}, ctx, { sheet: target, at: { r, c }, cell, arr: false, arrView: undefined, over: null, lets: null, cellValue: read })); v = deref(v, ctx); if (v === EMPTY_PATH) { v = false; } } catch (e) { if (!isErr(e)) { throw e; } v = e; }
+      depth--;
+      memo.set(k, v);
+      return v;
+    };
+    const v = read(f.sheet, f.r0, f.c0);
+    if (isErr(v)) { throw v; }
+    // an empty cell shows empty, as in Calc (and is 0 to a formula around it)
+    return v == null ? new ArrayVal([[null]]) : v;
+  });
 
   // ---- conditional formatting and validity, judged as Calc judges them ---
   // No DOM here: the page asks cfMatch / validate and paints or warns.
@@ -5629,6 +6287,8 @@
       this.rev = new Map();       // cell id → Set of formula cells depending on it
       this.volatile = new Set();
       this.dirty = new Set();
+      this.spills = new Set();     // the formulas that spill (or would, but something is in the way)
+      this.spillRuns = new Map();
       this.active = 0;
       this.extraModel = {};
       this.gridBounds = null;
@@ -5776,7 +6436,7 @@
       if (!cell) { return { v: null, t: '' }; }
       const out = { v: cell.v, t: cell.t };
       if (cell.f) { out.f = cell.f; out.fmtHint = cell.hint || ''; if (cell.hintCode) { out.fmtHintCode = cell.hintCode; } }
-      if (cell.arr) { out.a = rangeText(cell.arr); } else if (cell.of) { out.a = rangeText(cell.of.arr); }
+      if (cell.spill) { if (cell.arr) { out.a = rangeText(cell.arr); out.sp = true; } } else if (cell.of && cell.of.spill) { out.spill = rangeText(cell.of.arr); } else if (cell.arr) { out.a = rangeText(cell.arr); } else if (cell.of) { out.a = rangeText(cell.of.arr); }
       if (cell.fmt != null) { out.fmt = cell.fmt; }
       if (cell.s != null) { out.s = cell.s; }
       return out;
@@ -5793,8 +6453,15 @@
     setCell(s, r, c, spec) {
       const sh = this.sheet(s);
       const cur = sh.cell(r, c);
-      if (cur && (cur.arr || cur.of)) { throw partOfArray(); }
       const changed = [];
+      if (cur && cur.of && cur.of.spill) {
+        // a cell a formula spilled into: typing there blocks the spill (#SPILL!); clearing it changes nothing
+        const sp = spec || {};
+        if (!(sp.f != null && String(sp.f).length > 1) && (sp.v == null || sp.v === '') && sp.t !== 's') { return []; }
+        const anchor = cur.of;
+        this.collapse(anchor, changed, true);
+        this.markDirty(anchor);
+      } else if (cur && ((cur.arr && !cur.spill) || cur.of)) { throw partOfArray(); }
       this.put(sh, r, c, spec || {}, changed, true);
       return changed.concat(this.flush());
     }
@@ -5899,7 +6566,9 @@
       const cell = sh.cell(r, c);
       const a = cell ? (cell.arr ? cell : cell.of) : null;
       if (!a) { return null; }
-      return { range: rangeText(a.arr), f: a.f, r0: a.arr.r0, c0: a.arr.c0, r1: a.arr.r1, c1: a.arr.c1 };
+      const out = { range: rangeText(a.arr), f: a.f, r0: a.arr.r0, c0: a.arr.c0, r1: a.arr.r1, c1: a.arr.c1 };
+      if (a.spill) { out.spill = true; }
+      return out;
     }
     /** The anchors of the array formulas of a sheet that touch a block. */
     arraysTouching(sh, g) {
@@ -5921,6 +6590,8 @@
       const sh = this.sheet(s);
       const g = typeof range === 'string' ? rangeOf(range) : range;
       if (!g || g.r0 < 0 || g.c0 < 0 || g.r1 >= MAXR || g.c1 >= MAXC) { throw new Error('CalcBaseCalc: bad range ' + range); }
+      // a spill in the way is pulled back (it shows #SPILL! once the array is there)
+      for (const a of this.arraysTouching(sh, g)) { if (a.spill) { const inside = a.r >= g.r0 && a.r <= g.r1 && a.c >= g.c0 && a.c <= g.c1; this.collapse(a, [], true); if (!inside) { this.markDirty(a); } } }
       const touching = this.arraysTouching(sh, g);
       for (const a of touching) { if (a.arr.r0 < g.r0 || a.arr.r1 > g.r1 || a.arr.c0 < g.c0 || a.arr.c1 > g.c1) { throw partOfArray(); } }
       const changed = [];
@@ -5934,6 +6605,7 @@
       this.put(sh, g.r0, g.c0, { f }, changed, false);
       const anchor = sh.cell(g.r0, g.c0);
       anchor.arr = { r0: g.r0, c0: g.c0, r1: g.r1, c1: g.c1 };
+      anchor.spill = false; this.spills.delete(anchor); anchor.want = null;
       this.linkMembers(sh, anchor);
       this.dirty.delete(anchor); anchor.dirty = false;
       this.markDirty(anchor);
@@ -5966,7 +6638,7 @@
     /** Refuse a row/column change that would cut through an array formula, as Calc does. */
     checkArraysAxis(sh, axis, at, n) {
       for (const cell of sh.cells.values()) {
-        if (!cell.arr) { continue; }
+        if (!cell.arr || cell.spill) { continue; }
         const lo = axis === 'r' ? cell.arr.r0 : cell.arr.c0; const hi = axis === 'r' ? cell.arr.r1 : cell.arr.c1;
         if (n > 0) { if (lo < at && at <= hi) { throw partOfArray(); } } else {
           const end = at - n - 1;
@@ -5981,7 +6653,7 @@
         if (cell.of && (!cell.of.arr || sh.cells.get(sh.key(cell.of.r, cell.of.c)) !== cell.of)) { cell.of = null; }
       }
       for (const cell of sh.cells.values()) {
-        if (!cell.arr) { continue; }
+        if (!cell.arr || cell.spill) { continue; }
         const h = cell.arr.r1 - cell.arr.r0; const w = cell.arr.c1 - cell.arr.c0;
         cell.arr = { r0: cell.r, c0: cell.c, r1: cell.r + h, c1: cell.c + w };
         this.linkMembers(sh, cell);
@@ -5994,10 +6666,11 @@
       const f = spec.f != null && String(spec.f).charAt(0) === '=' && String(spec.f).length > 1 ? String(spec.f) : null;
       const empty = !f && (spec.v == null || spec.v === '') && spec.t !== 's' && spec.fmt == null && spec.s == null && (!cell || (cell.fmt == null && cell.s == null));
       if (cell && cell.f) { this.unregister(cell); }
+      if (cell && cell.spill) { if (cell.arr) { this.collapse(cell, changed, live); } cell.spill = false; cell.want = null; this.spills.delete(cell); }
       if (empty) {
         if (cell) { sh.cells.delete(key); if (r === sh.maxR || c === sh.maxC) { sh.shrink(); } }
         if (oldV !== null || oldT !== '') { changed.push({ sheet: sh.name, r, c }); }
-        if (live) { this.propagate(sh, r, c); }
+        if (live) { this.propagate(sh, r, c); this.watchSpills(sh, r, c); }
         return;
       }
       if (!cell) { cell = newCell(sh, r, c); sh.cells.set(key, cell); sh.touch(r, c); }
@@ -6011,6 +6684,7 @@
           try { cell.ast = parse(f.slice(1)); } catch (e) { if (isErr(e)) { cell.err = e.code; } else { throw e; } }
         }
         this.register(cell, sh);
+        cell.spill = !!(cell.ast && cell.ast.info.dyn);
         // A new or changed formula: it and everything reading it are worked out again.
         if (spec.v !== undefined && !live) { cell.v = spec.v; cell.t = spec.t || typeOf(spec.v); cell.dirty = false; } else { cell.dirty = false; this.markDirty(cell); }
         if (live && oldV === null && oldT === '') { /* value comes with the flush */ }
@@ -6020,6 +6694,111 @@
         cell.v = v; cell.t = spec.t || typeOf(v);
         cell.dirty = false;
         if (v !== oldV || cell.t !== oldT) { changed.push({ sheet: sh.name, r, c }); if (live) { this.propagate(sh, r, c); } }
+      }
+      if (live) { this.watchSpills(sh, r, c, cell); }
+    }
+    // -- spilling (Excel's dynamic arrays)
+    /** A cell changed: a formula that spills, or would, over it is worked out again. */
+    watchSpills(sh, r, c, except) {
+      for (const a of this.spills) {
+        if (a === except) { continue; }
+        if (a.sheet !== sh) { if (!this.sheets.includes(a.sheet) || a.sheet.cells.get(a.sheet.key(a.r, a.c)) !== a) { this.spills.delete(a); } continue; }
+        if (sh.cells.get(sh.key(a.r, a.c)) !== a || !a.spill) { this.spills.delete(a); continue; }
+        const g = a.want;
+        if (g && r >= g.r0 && r <= g.r1 && c >= g.c0 && c <= g.c1) { this.markDirty(a); }
+      }
+    }
+    /** Take a spill back: the cells it filled are empty again (their formats stay). */
+    collapse(anchor, changed, live) {
+      const g = anchor.arr; const sh = this.sheetOfCell(anchor);
+      anchor.arr = null;
+      if (!g || !sh) { return; }
+      for (let r = g.r0; r <= g.r1; r++) {
+        for (let c = g.c0; c <= g.c1; c++) {
+          const m = sh.cell(r, c);
+          if (!m || m === anchor || m.of !== anchor) { continue; }
+          m.of = null;
+          const had = m.v !== null || m.t !== '';
+          if (m.fmt == null && m.s == null) { sh.cells.delete(sh.key(r, c)); } else { m.v = null; m.t = ''; }
+          if (had) { changed.push({ sheet: sh.name, r, c }); if (live) { this.propagate(sh, r, c); } }
+        }
+      }
+      sh.shrink();
+    }
+    /** Work every spilling formula out again (merged cells changed: the page tells the engine through spillGuard). */
+    respillAll() { for (const sh of this.sheets) { for (const cell of sh.cells.values()) { if (cell.spill) { this.markDirty(cell); } } } return this.flush(); }
+    /** Every spill of a sheet taken back (before rows, columns or cells move; the recalculation spills them again). */
+    collapseSheet(sh) { for (const cell of Array.from(sh.cells.values())) { if (cell.spill && cell.arr) { this.collapse(cell, [], false); } } }
+    /** Whether a cell other than the formula's own spill is in the way: anything typed or worked out, another array. */
+    spillBlocked(sh, anchor, g) {
+      if (SPILL_GUARD && SPILL_GUARD(sh.name, g)) { return true; }
+      const blocks = (m) => m !== anchor && m.of !== anchor && (m.f || m.arr || m.of || m.v !== null || m.t !== '');
+      const area = (g.r1 - g.r0 + 1) * (g.c1 - g.c0 + 1);
+      if (area > sh.cells.size) {
+        for (const m of sh.cells.values()) { if (m.r >= g.r0 && m.r <= g.r1 && m.c >= g.c0 && m.c <= g.c1 && blocks(m)) { return true; } }
+        return false;
+      }
+      for (let r = g.r0; r <= g.r1; r++) { for (let c = g.c0; c <= g.c1; c++) { const m = sh.cell(r, c); if (m && blocks(m)) { return true; } } }
+      return false;
+    }
+    /**
+     * A spilling formula's answer: a single value is the cell's; an array is
+     * spilled from the cell (mat), or #SPILL! when it would leave the sheet or
+     * something is in the way — Excel's rules. An element shows as Excel shows
+     * it: an empty cell 0, TRUE and FALSE as they are.
+     */
+    spillValue(sh, cell, v, ctx) {
+      const runs = (this.spillRuns.get(cell) || 0) + 1;
+      this.spillRuns.set(cell, runs);
+      // a spill that keeps moving what it reads (it reads its own cells): a circular reference
+      if (runs > 16) { return { v: new CalcError(ERR.CIRC), mat: null }; }
+      let mat = null;
+      if (v instanceof RefList) { v = v.areas.length === 1 ? v.areas[0] : fail(ERR.VALUE); }
+      if (v instanceof RangeVal) { if (v.single) { v = ctx.cellValue(v.sheet, v.r0, v.c0); } else { mat = toArray(v, ctx); } } else if (v instanceof ArrayVal) { if (!v.h || !v.w) { return { v: new CalcError(ERR.CALC), mat: null }; } if (v.h === 1 && v.w === 1) { v = spillShown(v, v.rows[0][0], 0, 0); } else { mat = v; } }
+      if (!mat) {
+        cell.want = null; this.spills.delete(cell);
+        if (v === EMPTY_PATH) { v = false; }
+        if (v == null) { v = 0; }
+        if (typeof v === 'number' && !isFinite(v)) { v = new CalcError(ERR.NUM); }
+        return { v, mat: null };
+      }
+      const g = { r0: cell.r, c0: cell.c, r1: cell.r + mat.h - 1, c1: cell.c + mat.w - 1 };
+      cell.want = g; this.spills.add(cell);
+      if (g.r1 >= MAXR || g.c1 >= MAXC || this.spillBlocked(sh, cell, g)) { return { v: new CalcError(ERR.SPILL), mat: null }; }
+      return { v: spillShown(mat, mat.rows[0][0], 0, 0), mat };
+    }
+    /** Fill the cells of a spill (and empty the ones it no longer reaches). */
+    respill(sh, anchor, mat, changed) {
+      const old = anchor.arr;
+      const g = mat ? anchor.want : null;
+      const inG = (r, c) => g && r >= g.r0 && r <= g.r1 && c >= g.c0 && c <= g.c1;
+      if (old) {
+        for (let r = old.r0; r <= old.r1; r++) {
+          for (let c = old.c0; c <= old.c1; c++) {
+            if ((r === anchor.r && c === anchor.c) || inG(r, c)) { continue; }
+            const m = sh.cell(r, c);
+            if (!m || m.of !== anchor) { continue; }
+            m.of = null;
+            const had = m.v !== null || m.t !== '';
+            if (m.fmt == null && m.s == null) { sh.cells.delete(sh.key(r, c)); } else { m.v = null; m.t = ''; }
+            if (had) { changed.push({ sheet: sh.name, r, c }); this.propagate(sh, r, c); }
+          }
+        }
+      }
+      anchor.arr = g ? { r0: g.r0, c0: g.c0, r1: g.r1, c1: g.c1 } : null;
+      if (!g) { if (old) { sh.shrink(); } return; }
+      for (let r = g.r0; r <= g.r1; r++) {
+        for (let c = g.c0; c <= g.c1; c++) {
+          if (r === anchor.r && c === anchor.c) { continue; }
+          let m = sh.cell(r, c);
+          if (!m) { m = newCell(sh, r, c); sh.cells.set(sh.key(r, c), m); sh.touch(r, c); }
+          m.of = anchor;
+          let x = spillShown(mat, mat.rows[r - g.r0][c - g.c0], r - g.r0, c - g.c0);
+          if (typeof x === 'number' && !isFinite(x)) { x = new CalcError(ERR.NUM); }
+          const oldV = m.v; const oldT = m.t;
+          if (isErr(x)) { m.v = x.code; m.t = 'e'; } else { m.v = x; m.t = typeOf(x); }
+          if (m.v !== oldV || m.t !== oldT) { changed.push({ sheet: sh.name, r, c }); this.propagate(sh, r, c); }
+        }
       }
     }
     // -- dependency graph
@@ -6073,7 +6852,8 @@
       for (const d of sh.rdepWide) { if (r >= d.r0 && r <= d.r1 && c >= d.c0 && c <= d.c1) { this.markDirty(d.cell); } }
     }
     markDirty(cell) {
-      if (cell.dirty) { return; }
+      // a formula being worked out that reads a cell a spill just changed: worked out again after
+      if (cell.dirty) { if (cell.busy) { cell.again = true; } return; }
       const stack = [cell];
       while (stack.length) {
         const x = stack.pop();
@@ -6088,10 +6868,11 @@
     /** Push the formulas that read cell (r, c) and are not dirty yet. */
     dependents(sh, r, c, stack) {
       const set = this.rev.get(this.cellId(sh, r, c));
-      if (set) { for (const dep of set) { if (!dep.dirty) { stack.push(dep); } } }
+      const add = (x) => { if (!x.dirty) { stack.push(x); } else if (x.busy) { x.again = true; } };
+      if (set) { for (const dep of set) { add(dep); } }
       const col = sh.rdepCols.get(c);
-      if (col) { for (const d of col) { if (r >= d.r0 && r <= d.r1 && !d.cell.dirty) { stack.push(d.cell); } } }
-      for (const d of sh.rdepWide) { if (r >= d.r0 && r <= d.r1 && c >= d.c0 && c <= d.c1 && !d.cell.dirty) { stack.push(d.cell); } }
+      if (col) { for (const d of col) { if (r >= d.r0 && r <= d.r1) { add(d.cell); } } }
+      for (const d of sh.rdepWide) { if (r >= d.r0 && r <= d.r1 && c >= d.c0 && c <= d.c1) { add(d.cell); } }
     }
     sheetOfCell(cell) { if (cell.sheet) { return cell.sheet; } for (const sh of this.sheets) { if (sh.cells.get(sh.key(cell.r, cell.c)) === cell) { cell.sheet = sh; return sh; } } return null; }
     // -- recalculation
@@ -6101,9 +6882,13 @@
       const changed = [];
       for (const cell of this.volatile) { this.markDirty(cell); }
       if (!this.dirty.size) { return changed; }
-      const work = Array.from(this.dirty);
-      for (const cell of work) { if (cell.dirty) { this.ensure(cell, changed); } }
-      this.dirty.clear();
+      this.spillRuns.clear();
+      // a spill that grows or shrinks makes the formulas reading those cells dirty while this runs: again until none is
+      while (this.dirty.size) {
+        const work = Array.from(this.dirty);
+        this.dirty.clear();
+        for (const cell of work) { if (cell.dirty) { this.ensure(cell, changed); } }
+      }
       return changed;
     }
     recalc() {
@@ -6142,7 +6927,9 @@
         if (cell.err) { v = new CalcError(cell.err); } else {
           try {
             v = ev(cell.ast, ctx);
-            if (!pending.length && cell.arr) {
+            if (!pending.length && cell.spill) {
+              ({ v, mat } = this.spillValue(sh, cell, v, ctx));
+            } else if (!pending.length && cell.arr) {
               mat = v instanceof ArrayVal ? v : v instanceof RangeVal ? toArray(v, ctx) : new ArrayVal([[v === EMPTY_PATH ? null : v]]);
               v = arrayShown(mat, mat.h && mat.w ? mat.rows[0][0] : null, 0, 0);
               if (typeof v === 'number' && !isFinite(v)) { v = new CalcError(ERR.NUM); }
@@ -6169,7 +6956,9 @@
         this.dirty.delete(cell);
         stack.pop();
         if (cell.v !== oldV || cell.t !== oldT) { changed.push({ sheet: sh.name, r: cell.r, c: cell.c }); }
-        if (cell.arr) { this.spread(sh, cell, mat, isErr(v) && !mat ? v : null, changed); }
+        if (cell.spill) { this.respill(sh, cell, isErr(v) ? null : mat, changed); }
+        if (cell.again) { cell.again = false; this.markDirty(cell); }
+        if (cell.spill) { /* spilled above */ } else if (cell.arr) { this.spread(sh, cell, mat, isErr(v) && !mat ? v : null, changed); }
       }
     }
     /**
@@ -6197,7 +6986,7 @@
     context(sh, cell, pending, changed, level) {
       const wb = this;
       return {
-        wb, sheet: sh, at: { r: cell.r, c: cell.c }, L: this.L, arr: !!cell.arr, over: null, cell,
+        wb, sheet: sh, at: { r: cell.r, c: cell.c }, L: this.L, arr: !!(cell.arr || cell.spill), over: null, cell,
         cellValue(target, r, c) {
           const x = target.cells.get(r * MAXC + c);
           if (!x) { return null; }
@@ -6286,6 +7075,7 @@
     shiftAxis(s, axis, at, n) {
       const sh = this.sheet(s);
       this.checkArraysAxis(sh, axis, at, n);
+      this.collapseSheet(sh);
       const other = axis === 'r' ? 'c' : 'r';
       this.rewriteAll((t, formulaSheet) => {
         const target = t.sheet ? this.sheetByName(t.sheet.name) : formulaSheet;
@@ -6331,6 +7121,7 @@
       const inSrc = (r, c) => r >= src.r0 && r <= src.r1 && c >= src.c0 && c <= src.c1;
       const inDst = (r, c) => r >= src.r0 + dr && r <= src.r1 + dr && c >= src.c0 + dc && c <= src.c1 + dc;
       const dstG = { r0: src.r0 + dr, c0: src.c0 + dc, r1: src.r1 + dr, c1: src.c1 + dc };
+      this.collapseSheet(sh);
       const within = (a, g) => a.arr.r0 >= g.r0 && a.arr.r1 <= g.r1 && a.arr.c0 >= g.c0 && a.arr.c1 <= g.c1;
       const inSrcArrays = this.arraysTouching(sh, src);
       for (const a of inSrcArrays) { if (!within(a, src)) { throw partOfArray(); } }
@@ -6376,10 +7167,12 @@
           if (!ref) { continue; }
           const c = cells[addr] || {};
           this.put(sh, ref.r, ref.c, { f: c.f, v: c.v, t: c.t, fmt: c.fmt, s: c.s }, [], false);
-          if (c.f && c.a) { const g = rangeOf(c.a); if (g && g.r0 === ref.r && g.c0 === ref.c) { arrays.push({ sh, g }); } }
+          if (c.f && c.a) { const g = rangeOf(c.a); if (g && g.r0 === ref.r && g.c0 === ref.c) { arrays.push({ sh, g, d: !!c.sp }); } }
         }
       });
-      for (const { sh, g } of arrays) { const anchor = sh.cell(g.r0, g.c0); if (anchor && anchor.f) { anchor.arr = g; this.linkMembers(sh, anchor); } }
+      for (const { sh, g, d } of arrays) { const anchor = sh.cell(g.r0, g.c0); if (anchor && anchor.f) { anchor.arr = g; anchor.spill = d; this.linkMembers(sh, anchor); } }
+      // a formula that spills is worked out again: where it spills depends on what is around it
+      for (const sh of this.sheets) { for (const cell of sh.cells.values()) { if (cell.spill) { cell.v = undefined; } } }
       this.active = m.active || 0;
       for (const sh of this.sheets) { for (const cell of sh.cells.values()) { if (cell.f) { cell.sheet = sh; if (cell.v === undefined) { cell.dirty = true; this.dirty.add(cell); } } } }
       return this.flush();
@@ -6395,7 +7188,7 @@
         for (const cell of keys) {
           const o = {};
           if (cell.f) { o.f = cell.f; }
-          if (cell.arr) { o.a = rangeText(cell.arr); }
+          if (cell.arr) { o.a = rangeText(cell.arr); if (cell.spill) { o.sp = 1; } }
           if (cell.v !== null || cell.f) { o.v = cell.v; o.t = cell.t; }
           if (cell.fmt != null) { o.fmt = cell.fmt; }
           if (cell.s != null) { o.s = cell.s; }
@@ -6411,6 +7204,14 @@
   function arrayShown(mat, x, i, j) {
     if (x == null) { return mat && mat.ep && mat.ep.has((mat.h === 1 ? 0 : i) * 65536 + (mat.w === 1 ? 0 : j)) ? 0 : ''; }
     if (typeof x === 'boolean') { return x ? 1 : 0; }
+    return x;
+  }
+  /** What else stops a spill (the page's merged cells): (sheet name, { r0, c0, r1, c1 }) → true when blocked. */
+  let SPILL_GUARD = null;
+  /** An element of a spilled array as Excel shows it: an empty cell 0, IF's empty path FALSE. */
+  function spillShown(mat, x, i, j) {
+    if (x === EMPTY_PATH) { return false; }
+    if (x == null) { return mat && mat.ep && mat.ep.has((mat.h === 1 ? 0 : i) * 65536 + (mat.w === 1 ? 0 : j)) ? false : 0; }
     return x;
   }
   const newCell = (sh, r, c) => ({ r, c, sheet: sh, f: null, ast: null, v: null, t: '', fmt: undefined, s: undefined, hint: '', vol: false, dirty: false, pre: null, busy: false, arr: null, of: null });
@@ -6854,6 +7655,8 @@
     compute, formatAs, literal, ERR, FUNCS, general,
     MAXR, MAXC,
     /** The book being shown limits General to so many decimals (its calc.decimals), or not (null). */
+    /** The page says where a formula may not spill (merged cells): fn(sheetName, range) → true when it may not. */
+    spillGuard(fn) { SPILL_GUARD = typeof fn === 'function' ? fn : null; },
     standardDecimals(n) { STD_DEC = Number.isInteger(n) && n >= 0 && n <= 20 ? n : null; },
   };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; }

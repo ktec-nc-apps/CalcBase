@@ -37,6 +37,9 @@ final class XlsxWriter {
 	/** @var array<string, int> code => numFmtId */
 	private array $numFmts = [];
 
+	/** Whether a formula spills (the book then carries xl/metadata.xml). */
+	private bool $dynamic = false;
+
 	public function __construct(private array $model) {
 	}
 
@@ -47,7 +50,7 @@ final class XlsxWriter {
 			$sheets[] = $this->worksheet($sheet, $i === $this->model['active']);
 		}
 		$parts = [
-			'[Content_Types].xml' => $this->contentTypes(count($sheets)),
+			'[Content_Types].xml' => $this->contentTypes(count($sheets), $this->dynamic),
 			'_rels/.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
 				. '<Relationships xmlns="' . XlsxFormat::NS_PKG_REL . '">'
 				. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
@@ -60,10 +63,13 @@ final class XlsxWriter {
 				. '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
 				. '<dcterms:created xsi:type="dcterms:W3CDTF">' . gmdate('Y-m-d\TH:i:s\Z') . '</dcterms:created></cp:coreProperties>',
 			'xl/workbook.xml' => $this->workbook($names),
-			'xl/_rels/workbook.xml.rels' => $this->workbookRels(count($sheets)),
+			'xl/_rels/workbook.xml.rels' => $this->workbookRels(count($sheets), $this->dynamic),
 			'xl/styles.xml' => $this->styles(),
 			'xl/sharedStrings.xml' => $this->sharedStrings(),
 		];
+		if ($this->dynamic) {
+			$parts['xl/metadata.xml'] = self::DYNAMIC_METADATA;
+		}
 		foreach ($sheets as $i => $xml) {
 			$parts['xl/worksheets/sheet' . ($i + 1) . '.xml'] = $xml;
 		}
@@ -87,7 +93,19 @@ final class XlsxWriter {
 		return $out;
 	}
 
-	private function contentTypes(int $n): string {
+	/**
+	 * Excel 365's cell metadata for a dynamic array formula (cm="1" on its cell): the one
+	 * XLDAPR type with fDynamic, as Excel writes it. Without it Excel reads <f t="array">
+	 * as an old Ctrl+Shift+Enter array formula of a fixed size.
+	 */
+	private const DYNAMIC_METADATA = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
+		. '<metadata xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray">'
+		. '<metadataTypes count="1"><metadataType name="XLDAPR" minSupportedVersion="120000" copy="1" pasteAll="1" pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" clearComments="1" assign="1" coerce="1" cellMeta="1"/></metadataTypes>'
+		. '<futureMetadata name="XLDAPR" count="1"><bk><extLst><ext uri="{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}"><xda:dynamicArrayProperties fDynamic="1" fCollapsed="0"/></ext></extLst></bk></futureMetadata>'
+		. '<cellMetadata count="1"><bk><rc t="1" v="0"/></bk></cellMetadata>'
+		. '</metadata>';
+
+	private function contentTypes(int $n, bool $dynamic = false): string {
 		$out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
 			. '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
 			. '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -99,6 +117,9 @@ final class XlsxWriter {
 			. '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>';
 		for ($i = 1; $i <= $n; $i++) {
 			$out .= '<Override PartName="/xl/worksheets/sheet' . $i . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+		}
+		if ($dynamic) {
+			$out .= '<Override PartName="/xl/metadata.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml"/>';
 		}
 		return $out . '</Types>';
 	}
@@ -128,13 +149,16 @@ final class XlsxWriter {
 		return $out . '<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>';
 	}
 
-	private function workbookRels(int $n): string {
+	private function workbookRels(int $n, bool $dynamic = false): string {
 		$out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" . '<Relationships xmlns="' . XlsxFormat::NS_PKG_REL . '">';
 		for ($i = 1; $i <= $n; $i++) {
 			$out .= '<Relationship Id="rId' . $i . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $i . '.xml"/>';
 		}
 		$out .= '<Relationship Id="rId' . ($n + 1) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
 		$out .= '<Relationship Id="rId' . ($n + 2) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>';
+		if ($dynamic) {
+			$out .= '<Relationship Id="rId' . ($n + 3) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata" Target="metadata.xml"/>';
+		}
 		return $out . '</Relationships>';
 	}
 
@@ -215,6 +239,11 @@ final class XlsxWriter {
 		if (isset($cell['f'])) {
 			// an array formula says the range it fills (<f t="array" ref="C63:C63">)
 			$box = isset($cell['a']) ? Cells::parseRange($cell['a']) : null;
+			// a formula that spills: Excel 365's dynamic array, marked with cell metadata (xl/metadata.xml)
+			if ($box !== null && !empty($cell['sp'])) {
+				$attrs .= ' cm="1"';
+				$this->dynamic = true;
+			}
 			$f = ($box !== null ? '<f t="array" ref="' . Cells::rangeName(...$box) . '">' : '<f>') . self::esc(FormulaSyntax::toXlsx($cell['f'])) . '</f>';
 		}
 		if ($t === 'n' && is_numeric($v)) {

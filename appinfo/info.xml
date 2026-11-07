@@ -27,7 +27,7 @@ Features:
 
 CalcBase は、文書を標準の HTML で保存するワープロ EditBase から派生したアプリです。無料の AI-Hub アプリを入れると、大規模言語モデル（LLM）をアシスタントとして使えます（AI-Hub で一度設定すれば、サーバー上のすべてのアプリで使えます）。開発を始めて間もないプログラムのため、不具合が残っている可能性があります。
 
-主な機能:
+主な機能：
 - ブックは Files に保存される標準の HTML ファイルで、ほかのファイルと同じように編集・共有できます。バージョンはブックと同じ場所に保存されます
 - 複数のシート、セルの結合、ウィンドウ枠の固定、列の幅と行の高さ、表示形式（数値・通貨・パーセント・日付・時刻・和暦）、フォント、色、罫線、配置
 - LibreOffice Calc と同じ約500種類の関数（数学、統計、文字列、検索、日付と時刻、論理、情報、財務）
@@ -38,12 +38,13 @@ CalcBase は、文書を標準の HTML で保存するワープロ EditBase か�
 - AI-Hub アプリを使った AI アシスタント。表計算と Calc の数式に詳しいチャットがシートの横に表示され、セルの変更を提案します。提案された変更は、1回の操作で元に戻せる形で適用されます
 - 日本語・英語の画面、ライト／ダークテーマ
 - HTML5 と CSS が基本です。ブックはブラウザーさえあれば読めます。JavaScript は HTML と CSS ではできないことにだけ使います]]></description>
-	<version>0.1.1</version>
+	<version>0.1.2</version>
 	<licence>agpl</licence>
 	<author>KTEC</author>
 	<namespace>CalcBase</namespace>
 	<category>office</category>
 	<category>tools</category>
+	<category>ai</category>
 	<website>https://github.com/ktec-nc-apps/CalcBase</website>
 	<bugs>https://github.com/ktec-nc-apps/CalcBase/issues</bugs>
 	<repository>https://github.com/ktec-nc-apps/CalcBase</repository>

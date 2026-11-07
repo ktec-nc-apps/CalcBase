@@ -8,6 +8,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { haveSoffice, loRun, readCache, writeCache } from './lo.mjs';
 import { FIXTURES, CASES, LAYOUTS } from './cases.mjs';
+import { FIXTURE as XFIX, EXCEL_CASES, PCRE2_VECTORS } from './excel-cases.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -463,6 +464,65 @@ function unitMore() {
   eq('valid input that is a formula is judged by its result', w6.validateCell('Sheet1', 0, 1, { allow: 'whole', op: 'greater', value1: '0' }, '=C1*2').valid, true);
 }
 
+// ---- Excel 365's functions (not in LibreOffice 24.2): answers from Microsoft's documentation --
+function unitExcel() {
+  const val = (x) => (x.t === 'e' ? x.v : x.t === '' ? '' : x.v);
+  for (const [f, want] of EXCEL_CASES) {
+    const wb = C.workbook({ locale: 'en' });
+    XFIX.forEach((row, r) => row.forEach((v, c) => { if (v !== '') { wb.setCell('Sheet1', r, c, { v, t: typeof v === 'number' ? 'n' : typeof v === 'boolean' ? 'b' : 's' }); } }));
+    wb.setInput('Sheet1', 0, 23, f);
+    const g = wb.get('Sheet1', 0, 23);
+    let got = val(g);
+    if (g.a && g.sp) {
+      const [p0, p1] = g.a.split(':').map(C.parseRef);
+      got = [];
+      for (let r = p0.r; r <= p1.r; r++) { const row = []; for (let c = p0.c; c <= p1.c; c++) { row.push(val(wb.get('Sheet1', r, c))); } got.push(row); }
+    }
+    eq('Excel ' + f, got, want);
+  }
+  // regular expressions read as PCRE2 reads them (every match, the groups of the first)
+  const wb = C.workbook({ locale: 'en' });
+  for (const [text, pat, all, groups] of PCRE2_VECTORS) {
+    wb.setCell('Sheet1', 0, 0, { v: text, t: 's' }); wb.setCell('Sheet1', 0, 1, { v: pat, t: 's' });
+    wb.setInput('Sheet1', 0, 2, '=ARRAYTOTEXT(REGEXEXTRACT(A1;B1;1);1)'); wb.setInput('Sheet1', 0, 3, '=ARRAYTOTEXT(REGEXEXTRACT(A1;B1;2);1)');
+    const q = (x) => '{' + x.map((s) => '"' + s.replace(/"/g, '""') + '"').join(',') + '}';
+    eq('PCRE2 ' + JSON.stringify(text) + ' ' + pat, [wb.get('Sheet1', 0, 2).v, wb.get('Sheet1', 0, 3).v], [all ? q(all) : '#N/A', groups ? q(groups) : '#N/A']);
+  }
+  // spilling: into empty cells, #SPILL! when something is in the way, and back when it is cleared
+  const S = C.workbook({ locale: 'en' });
+  const at = (a) => { const p = C.parseRef(a); return S.get('Sheet1', p.r, p.c); };
+  const put = (a, t) => { const p = C.parseRef(a); return S.setInput('Sheet1', p.r, p.c, t); };
+  put('A1', '=SEQUENCE(3;2)'); put('D1', '=SUM(A1:B3)'); put('D2', '=B3*10');
+  eq('spill fills its cells', [at('A1').v, at('B1').v, at('B3').v, at('A1').a, at('B3').spill, at('D1').v, at('D2').v], [1, 2, 6, 'A1:B3', 'A1:B3', 21, 60]);
+  put('A2', 'x');
+  eq('a value in the way is #SPILL!', [at('A1').v, at('B1').t, at('A2').v, at('D1').v], ['#SPILL!', '', 'x', '#SPILL!']);
+  put('A2', '');
+  eq('cleared, it spills again (and what reads it follows)', [at('A1').v, at('B3').v, at('D1').v, at('D2').v], [1, 6, 21, 60]);
+  eq('clearing a spilled cell changes nothing', [put('B2', '').length, at('B2').v], [0, 4]);
+  put('A1', '=SEQUENCE(2)');
+  eq('a smaller answer empties the rest', [at('A3').t, at('B1').t, at('D1').v, at('D2').v], ['', '', 3, 0]);
+  put('C5', '=SEQUENCE(2;2)'); put('A5', '=SEQUENCE(1;3)');
+  eq('another spill in the way', [at('A5').v, at('C5').v], ['#SPILL!', 1]);
+  put('E8', '=A1:A2>1');
+  eq('a formula without a dynamic array function keeps Calc\'s implicit intersection', [at('E8').v, at('E8').a], ['#VALUE!', undefined]);
+  put('F8', '=FILTER(A1:A2;A1:A2>1)=2'); put('G8', '=SORT(A1:A2>1)');
+  eq('TRUE and FALSE stay TRUE and FALSE', [at('F8').v, at('G8').v, at('G9').v], [true, false, true]);
+  const edge = C.workbook({ locale: 'en' }); edge.setInput('Sheet1', 1048575, 0, '=SEQUENCE(2)');
+  eq('past the last row is #SPILL!', edge.get('Sheet1', 1048575, 0).v, '#SPILL!');
+  S.insertRows('Sheet1', 1, 1);
+  eq('a row inserted through a spill: it spills again where it is', [at('A1').v, at('A2').v, at('A3').t, at('A1').a], [1, 2, '', 'A1:A2']);
+  const M = C.workbook({ locale: 'en' }); M.setInput('Sheet1', 0, 0, '=SEQUENCE(2;2)');
+  const model = M.toModel(); const M2 = C.workbook({ locale: 'en' }); M2.load(model);
+  eq('the model keeps a spill (a, sp) and the values', [model.sheets[0].cells.A1.a, model.sheets[0].cells.A1.sp, M2.get('Sheet1', 1, 1).v, M2.get('Sheet1', 1, 1).spill], ['A1:B2', 1, 4, 'A1:B2']);
+  M2.setArrayFormula('Sheet1', 'B1:B2', '=7');
+  eq('an array formula over a spill blocks it', [M2.get('Sheet1', 0, 0).v, M2.get('Sheet1', 1, 1).v], ['#SPILL!', 7]);
+  C.spillGuard((name, g) => name === 'Sheet1' && g.r1 >= 4 && g.r0 <= 4 && g.c0 <= 9 && g.c1 >= 9);
+  const G = C.workbook({ locale: 'en' }); G.setInput('Sheet1', 2, 9, '=SEQUENCE(3)');
+  eq('merged cells in the way (the page\'s spillGuard) are #SPILL!', G.get('Sheet1', 2, 9).v, '#SPILL!');
+  C.spillGuard(null); G.respillAll();
+  eq('unmerged, it spills', G.get('Sheet1', 4, 9).v, 3);
+}
+
 // ---- the quality gate's findings (/root/calcbase-tests/BUGS.md), LibreOffice's answers --
 // lo-input.json: typing (.uno:EnterString) and the fill handle (fillAuto) in
 // Calc 24.2 ja-JP, measured by lo_input.py; the format values are Calc's
@@ -615,7 +675,9 @@ function loCompare() {
         const mine = w.get(s.name, r, c);
         const shown = (shownRows[r] || [])[c] || ''; const raw = (rawRows[r] || [])[c] || '';
         const want = loValue(shown, raw);
-        const ok = shown === '' && raw === '' ? (mine.t === '' || (mine.t === 's' && mine.v === '')) : same(mine, want, shown);
+        let ok = shown === '' && raw === '' ? (mine.t === '' || (mine.t === 's' && mine.v === '')) : same(mine, want, shown);
+        // a layout may allow numbers to differ in the last digits (L.tol, relative to the largest of the answer: FOURIER's rounding)
+        if (!ok && L.tol && want.kind === 'num' && mine.t === 'n') { ok = Math.abs(mine.v - want.v) <= L.tol; }
         const known = L.diff && L.diff[s.name + '.' + C.refName(r, c)];
         if (known) { if (ok) { passed++; } else { knownL.push(L.name + ' ' + s.name + '.' + C.refName(r, c) + ' ' + label + '  engine=' + show(mine) + '  LibreOffice=' + shown + '  — ' + known); } return; }
         if (ok) { passed++; } else { failed++; diffs.push(L.name + ' ' + s.name + '.' + C.refName(r, c) + ' ' + label + '  engine=' + show(mine) + '  LibreOffice=' + shown); }
@@ -668,7 +730,7 @@ function perf() {
   eq('perf chain edit < 50 ms', edit < 50, true);
 }
 
-if (!args.has('--perf-only')) { unit(); unitMore(); unitBugs(); loCompare(); }
+if (!args.has('--perf-only')) { unit(); unitMore(); unitBugs(); unitExcel(); loCompare(); }
 perf();
 if (failures.length) { console.log('\nFailed:'); failures.forEach((f) => console.log('  ' + f)); }
 console.log('\n' + passed + ' passed, ' + failed + ' failed');

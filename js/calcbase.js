@@ -14,6 +14,10 @@
   const Vue = window.__EditBaseVue || window.Vue;
   const { createApp } = Vue;
   const Calc = window.CalcBaseCalc;
+  // the assistant's tools that change the writer's books (AiTools): after one, the book list is read again
+  const AI_BOOK_TOOLS = ['create_book', 'write_cells', 'rename_book', 'delete_book', 'restore_version'];
+  // a formula does not spill over merged cells (Excel: #SPILL!)
+  if (Calc.spillGuard) { Calc.spillGuard((name, g) => { const u = UIS.find((x) => x.name === name); return !!u && u.merges.some((m) => m.r0 <= g.r1 && m.r1 >= g.r0 && m.c0 <= g.c1 && m.c1 >= g.c0); }); }
 
   const BASE = ((window.OC && OC.generateUrl) ? OC.generateUrl('/apps/calcbase') : '/apps/calcbase') + '/';
   // The request token is read each time it is sent, not once at load: Nextcloud
@@ -616,7 +620,7 @@
           if (g && g.t) {
             if (g.f) { a.push(' data-f="' + esc(g.f) + '"'); }
             // an array formula: its range on the cell that holds it (the others hold its values)
-            if (g.f && g.a) { a.push(' data-a="' + esc(g.a) + '"'); }
+            if (g.f && g.a) { a.push(' data-a="' + esc(g.a) + '"'); if (g.sp) { a.push(' data-sp="1"'); } }
             a.push(' data-t="' + g.t + '"');
             text = Calc.format(g.v, g.t, fmt, 'ja');
             if (g.t === 'n' && !fmt && read.font) {
@@ -735,7 +739,7 @@
           const style = String(td.getAttribute('data-style') || '').slice(0, 60);
           if (t || f) {
             const cell = {};
-            if (f && f[0] === '=') { cell.f = f; const arr = td.getAttribute('data-a') || ''; if (/^\$?[A-Za-z]{1,3}\$?\d{1,7}(:\$?[A-Za-z]{1,3}\$?\d{1,7})?$/.test(arr)) { cell.a = arr.replace(/\$/g, '').toUpperCase(); } }
+            if (f && f[0] === '=') { cell.f = f; const arr = td.getAttribute('data-a') || ''; if (/^\$?[A-Za-z]{1,3}\$?\d{1,7}(:\$?[A-Za-z]{1,3}\$?\d{1,7})?$/.test(arr)) { cell.a = arr.replace(/\$/g, '').toUpperCase(); if (td.getAttribute('data-sp') === '1') { cell.sp = 1; } } }
             if (t === 'n') { cell.v = Number(dv != null ? dv : text.replace(/[,¥$€£%\s]/g, '')); cell.t = 'n'; if (isNaN(cell.v)) { cell.v = 0; } }
             else if (t === 'b') { cell.v = String(dv != null ? dv : text).toUpperCase() === 'TRUE'; cell.t = 'b'; }
             else if (t === 'e') { cell.v = text; cell.t = 'e'; }
@@ -2141,6 +2145,10 @@
             <div class="ai-imgs" v-if="m.images && m.images.length"><img v-for="(im, k) in m.images" :key="k" :src="im.url" :alt="im.name" :title="im.name"></div>
             <div class="ai-bubble" v-html="aiHtml(m)"></div>
             <div class="did" v-if="m.did">{{ m.did }}</div>
+            <div class="ai-acts" v-if="m.acts && m.acts.length">
+              <div class="ai-acts-h">{{ t('What was actually done') }}</div>
+              <div class="ai-act" v-for="(a, k) in m.acts" :key="k" :class="a.ok ? 'ok' : 'fail'"><span class="mark">{{ a.ok ? '✓' : '✗' }}</span> <span>{{ a.ok ? (a.report || t(a.label)) : t(a.label) }}</span><span v-if="!a.ok"> （{{ t('Failed') }}）</span></div>
+            </div>
             <button type="button" class="ai-copy" v-if="aiHtml(m)" :class="{ done: m.copied }" :title="t('Copy')" :aria-label="t('Copy')" @click="aiCopy(m)">{{ m.copied ? '✓' : '📋' }}<span class="ai-copied" v-if="m.copied" role="status">{{ t('Copied') }}</span></button>
           </div>
         </template>
@@ -4689,7 +4697,7 @@
       /** What the model is shown: the book's name, the sheets, the active sheet's used range as TSV with formulas (capped), the selection. */
       aiContext() {
         const sh = this.sheet();
-        const out = { book: this.book.name || '', sheets: UIS.map((u) => u.name), active: sh ? sh.name : '', range: '', tsv: '', selection: { range: this.selText, tsv: '' } };
+        const out = { id: this.book.id || 0, book: this.book.name || '', sheets: UIS.map((u) => u.name), active: sh ? sh.name : '', range: '', tsv: '', selection: { range: this.selText, tsv: '' } };
         if (!sh) { return out; }
         this.refreshUsed();
         const cellText = (r, c) => {
@@ -5438,7 +5446,8 @@
       /** The format a cell is shown in (see fmtOf). */
       fmtAt(sh, r, c, g) { return fmtOf(sh.meta.get(K(r, c)), g || wb.get(sh.name, r, c)); },
       inputOf(g, fmt) {
-        if (!g || !g.t) { return ''; }
+        // a cell a formula spilled into holds nothing of its own
+        if (!g || !g.t || g.spill) { return ''; }
         if (g.f) { return g.f; }
         if (g.t === 'n') { if (fmt && (isDateFmt(fmt) || isTimeFmt(fmt) || /%/.test(fmt))) { return Calc.format(g.v, 'n', fmt.split(';')[0].replace(/\[[^\]]*\]/g, ''), 'ja'); } return String(g.v); }
         if (g.t === 'b') { return g.v ? 'TRUE' : 'FALSE'; }
@@ -5458,6 +5467,8 @@
         // an imported cell keeps is not the person's choice of one: Calc does not tell them apart either)
         if (text[0] === '=' && meta && meta.fmt === 'General' && (after.fmtHint || after.fmtHintCode)) { this.setMeta(sh, r, c, { fmt: '' }); }
         if (after.t) { if (r > sh.maxR) { sh.maxR = r; } if (c > sh.maxC) { sh.maxC = c; } }
+        // a formula that spills uses the cells it spills into
+        if (after.sp && after.a) { const q = parseRange(after.a); if (q) { if (q.r1 > sh.maxR) { sh.maxR = q.r1; } if (q.c1 > sh.maxC) { sh.maxC = q.c1; } } }
       },
       setMeta(sh, r, c, patch) {
         const k = K(r, c);
@@ -5872,7 +5883,8 @@
             for (let tr = 0; tr < tileR; tr += 1) { for (let tc = 0; tc < tileC; tc += 1) { pm.forEach((m) => { const o = { r0: g.r0 + tr * srcRows + m.r0, c0: g.c0 + tc * srcCols + m.c0, r1: g.r0 + tr * srcRows + m.r1, c1: g.c0 + tc * srcCols + m.c1 }; if (o.r1 < MAX_ROWS && o.c1 < MAX_COLS) { added.push(o); } }); } }
             sh.merges = kept.concat(added);
             const now = sheets.map((u) => u.merges.map((m) => Object.assign({}, m)));
-            const put = (list) => sheets.forEach((u, i) => { u.merges = list[i].map((m) => Object.assign({}, m)); });
+            const put = (list) => { sheets.forEach((u, i) => { u.merges = list[i].map((m) => Object.assign({}, m)); }); if (wb.respillAll) { wb.respillAll(); } };
+            if (wb.respillAll) { wb.respillAll(); }
             if (this.curStep) { this.curStep.extra = { undo: () => put(was), redo: () => put(now) }; }
           }
           this.sel.ranges = [{ r0: g.r0, c0: g.c0, r1, c1 }]; this.sel.cur = { r: g.r0, c: g.c0 }; this.sel.anchor = { r: g.r0, c: g.c0 };
@@ -6089,7 +6101,7 @@
         if (this.book.readOnly) { return; }
         const sh = this.sheet(); const g = this.selRange();
         const idx = sh.merges.findIndex((m) => m.r0 === g.r0 && m.c0 === g.c0 && m.r1 === g.r1 && m.c1 === g.c1);
-        const apply = (list) => { sh.merges = list.map((m) => Object.assign({}, m)); this.touch(); this.afterChange(); };
+        const apply = (list) => { sh.merges = list.map((m) => Object.assign({}, m)); if (wb.respillAll) { wb.respillAll(); } this.touch(); this.afterChange(); };
         const was = sh.merges.map((m) => Object.assign({}, m));
         let now;
         if (idx >= 0) { now = was.filter((m, i) => i !== idx); }
@@ -6753,7 +6765,10 @@
         }
         if (ticket !== this.ai.ask) { return; }
         const parsed = (answer && typeof answer === 'object' && (typeof answer.reply === 'string' || Array.isArray(answer.edits))) ? { reply: String(answer.reply || answer.text || ''), edits: Array.isArray(answer.edits) ? answer.edits : null, bad: false } : aiAnswer(answer && typeof answer === 'object' ? answer.text : answer);
-        const msg = { role: 'assistant', text: parsed.reply || String((answer && answer.text) || ''), reply: parsed.reply, did: '' };
+        const msg = { role: 'assistant', text: parsed.reply || String((answer && answer.text) || ''), reply: parsed.reply, did: '',
+          // what the tools did, from AI-Hub's record of each call, apart from the assistant's words: the
+          // changes, a failure as a failure (as RegiBase shows them; reads are not listed)
+          acts: (Array.isArray(answer.actions) ? answer.actions : []).filter((a) => a && a.kind !== 'read').map((a) => ({ label: String(a.label || a.tool || ''), ok: !!a.ok, report: String(a.report || '') })) };
         this.ai.msgs.push(msg);
         const read = answer && typeof answer === 'object' && answer.read && typeof answer.read === 'object' ? answer.read : null;
         if (read && round < 6) {
@@ -6765,6 +6780,8 @@
           this.ai.msgs.push({ role: 'user', text: follow, hidden: true });
           return this.aiRound(follow, round + 1);
         }
+        // the assistant made, wrote, renamed or deleted another book: the list shows it (2026-11-07)
+        if (Array.isArray(answer.tools) && answer.tools.some((n) => AI_BOOK_TOOLS.includes(n))) { try { await this.loadBooks(); } catch (e) { /* shown on the next load */ } }
         if (parsed.edits && parsed.edits.length) { msg.did = this.aiApply(parsed.edits); }
         else if (parsed.bad) { msg.did = this.t('The assistant\'s list of changes could not be read, so nothing was changed.'); }
         this.ai.busy = false; this.ai.busyText = '';

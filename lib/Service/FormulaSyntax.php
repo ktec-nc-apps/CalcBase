@@ -20,10 +20,91 @@ final class FormulaSyntax {
 	/** A formula written as the person types it, as an ODS table:formula attribute. */
 	public static function toOds(string $formula): string {
 		$body = self::body($formula);
-		return 'of:=' . self::walk($body, ';', static fn (array $ref): string => self::odsRef($ref), false, static function (string $name): string {
+		return 'of:=' . self::letNames(self::walk($body, ';', static fn (array $ref): string => self::odsRef($ref), false, static function (string $name): string {
 			$name = self::native(strtoupper($name));
+			if (in_array($name, self::MS_ODF, true)) {
+				return 'COM.MICROSOFT.' . $name;
+			}
 			return FunctionNames::NATIVE_TO_ODF[$name] ?? $name;
-		}, 'calc');
+		}, 'calc'), 'COM.MICROSOFT.LET', ';');
+	}
+
+	/**
+	 * Excel's functions that LibreOffice 24.2 does not have. LibreOffice from 24.8 on names
+	 * them COM.MICROSOFT.… in an ODS file (measured in Collabora Office 26, LibreOffice 25's
+	 * core: of:=XMATCH(…) is #NAME? there, of:=COM.MICROSOFT.XMATCH(…) is read), and so does
+	 * CalcBase, for the ones LibreOffice has not taken up yet too.
+	 */
+	private const MS_ODF = ['XLOOKUP', 'XMATCH', 'FILTER', 'SORT', 'SORTBY', 'UNIQUE', 'SEQUENCE', 'RANDARRAY', 'LET', 'VSTACK', 'HSTACK',
+		'TOCOL', 'TOROW', 'WRAPROWS', 'WRAPCOLS', 'TAKE', 'DROP', 'CHOOSEROWS', 'CHOOSECOLS', 'EXPAND', 'TEXTSPLIT', 'TEXTBEFORE', 'TEXTAFTER',
+		'ARRAYTOTEXT', 'VALUETOTEXT', 'REGEXTEST', 'REGEXEXTRACT', 'REGEXREPLACE', 'PERCENTOF'];
+
+	/**
+	 * The names LET gives values, with Excel's _xlpm. prefix: an XLSX file writes
+	 * _xlfn.LET(_xlpm.x,1,_xlpm.x+1), and LibreOffice writes its ODS files so too
+	 * (COM.MICROSOFT.LET(_xlpm.x;1;_xlpm.x+1), measured). $let is the call's name as written.
+	 */
+	private static function letNames(string $x, string $let, string $sep): string {
+		$out = '';
+		$n = strlen($x);
+		$len = strlen($let);
+		$i = 0;
+		while ($i < $n) {
+			$ch = $x[$i];
+			if ($ch === '"') {
+				$end = self::stringEnd($x, $i);
+				$out .= substr($x, $i, $end - $i);
+				$i = $end;
+				continue;
+			}
+			if (($i === 0 || !preg_match('/[A-Za-z0-9_.$!\']/', $x[$i - 1])) && strcasecmp(substr($x, $i, $len + 1), $let . '(') === 0) {
+				$args = self::topArgs($x, $i + $len + 1);
+				if ($args !== null) {
+					$list = array_map(static fn (string $a): string => self::letNames($a, $let, $sep), $args[0]);
+					$names = [];
+					for ($k = 0; $k + 1 < count($list); $k += 2) {
+						$nm = trim($list[$k]);
+						if (preg_match('/^[A-Za-z_][A-Za-z0-9_.]*$/', $nm) && stripos($nm, '_xlpm.') !== 0) {
+							$names[] = strtolower($nm);
+						}
+					}
+					if ($names !== []) {
+						$list = array_map(static fn (string $a): string => self::prefixNames($a, $names), $list);
+					}
+					$out .= substr($x, $i, $len) . '(' . implode($sep, $list) . ')';
+					$i = $args[1];
+					continue;
+				}
+			}
+			$out .= $ch;
+			$i++;
+		}
+		return $out;
+	}
+
+	/** @param list<string> $names lower case */
+	private static function prefixNames(string $a, array $names): string {
+		$out = '';
+		$n = strlen($a);
+		$i = 0;
+		while ($i < $n) {
+			if ($a[$i] === '"') {
+				$end = self::stringEnd($a, $i);
+				$out .= substr($a, $i, $end - $i);
+				$i = $end;
+				continue;
+			}
+			if ((ctype_alpha($a[$i]) || $a[$i] === '_') && ($i === 0 || !preg_match('/[A-Za-z0-9_.$!\'\[]/', $a[$i - 1]))
+				&& preg_match('/\G[A-Za-z_][A-Za-z0-9_.]*/', $a, $m, 0, $i)) {
+				$after = $a[$i + strlen($m[0])] ?? '';
+				$out .= (in_array(strtolower($m[0]), $names, true) && !preg_match('/[(!\]]/', $after) ? '_xlpm.' : '') . $m[0];
+				$i += strlen($m[0]);
+				continue;
+			}
+			$out .= $a[$i];
+			$i++;
+		}
+		return $out;
 	}
 
 	/**
@@ -81,8 +162,17 @@ final class FormulaSyntax {
 						continue;
 					}
 				}
-				$out .= (FunctionNames::ODF_TO_NATIVE[$name] ?? $m[1]) . $m[2];
+				if (str_starts_with($name, 'COM.MICROSOFT.') && in_array(substr($name, 14), self::MS_ODF, true)) {
+					$out .= substr($name, 14) . $m[2];
+				} else {
+					$out .= (FunctionNames::ODF_TO_NATIVE[$name] ?? $m[1]) . $m[2];
+				}
 				$i += strlen($m[0]);
+				continue;
+			}
+			// a name LET gives a value, as written in the file (_xlpm.x) is the name typed (x)
+			if ($ch === '_' && ($i === 0 || !preg_match('/[A-Za-z0-9_.$]/', $body[$i - 1])) && strncasecmp(substr($body, $i, 6), '_xlpm.', 6) === 0) {
+				$i += 6;
 				continue;
 			}
 			$out .= $ch;
@@ -168,6 +258,7 @@ final class FormulaSyntax {
 		// Excel 365's, which Excel itself writes so
 		'XLOOKUP', 'XMATCH', 'SEQUENCE', 'RANDARRAY', 'LET', 'LAMBDA', 'TEXTBEFORE', 'TEXTAFTER', 'TEXTSPLIT', 'VSTACK', 'HSTACK', 'TAKE', 'DROP',
 		'CHOOSECOLS', 'CHOOSEROWS', 'TOCOL', 'TOROW', 'WRAPCOLS', 'WRAPROWS', 'EXPAND', 'ARRAYTOTEXT', 'VALUETOTEXT',
+		'REGEXTEST', 'REGEXEXTRACT', 'REGEXREPLACE', 'PERCENTOF',
 		// Calc's own (ORG.LIBREOFFICE.* all of them, ORG.OPENOFFICE.* these)
 		'ORG.OPENOFFICE.CONVERT', 'ORG.OPENOFFICE.CURRENT', 'ORG.OPENOFFICE.EASTERSUNDAY', 'ORG.OPENOFFICE.ERRORTYPE', 'ORG.OPENOFFICE.GOALSEEK',
 		'ORG.OPENOFFICE.MULTIRANGE', 'ORG.OPENOFFICE.STYLE'];
@@ -176,7 +267,7 @@ final class FormulaSyntax {
 
 	/** A formula written as the person types it, as the text of an XLSX <f> element (no leading =). */
 	public static function toXlsx(string $formula): string {
-		return self::completeArgs(self::walk(self::body($formula), ',', static fn (array $ref): string => self::xlsxRef($ref), true, static function (string $name): string {
+		return self::letNames(self::completeArgs(self::walk(self::body($formula), ',', static fn (array $ref): string => self::xlsxRef($ref), true, static function (string $name): string {
 			$name = self::native(strtoupper(preg_replace('/^(?:_xlfn\.|_xlws\.)+/i', '', $name) ?? $name));
 			// as LibreOffice 24.2 writes it (FunctionNames, measured): F.DIST is _xlfn.F.DIST,
 			// Calc's FLOOR _xlfn.FLOOR.MATH, FLOOR.XCL plain FLOOR, B stays B
@@ -195,7 +286,7 @@ final class FormulaSyntax {
 				return '_xlfn._xlws.' . $name;
 			}
 			return in_array($name, self::XLFN, true) || str_starts_with($name, 'ORG.LIBREOFFICE.') ? '_xlfn.' . $name : $name;
-		}, 'excel'));
+		}, 'excel')), '_xlfn.LET', ',');
 	}
 
 	/**

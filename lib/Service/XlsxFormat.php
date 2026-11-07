@@ -591,6 +591,10 @@ final class XlsxFormat {
 				// an array formula: the range it fills (<f t="array" ref="C63:C63">)
 				if ($f->getAttribute('t') === 'array' && ($box = Cells::parseRange(str_replace('$', '', $f->getAttribute('ref')))) !== null) {
 					$out['a'] = Cells::rangeName(...$box);
+					// Excel 365 marks a formula that spills with cell metadata (cm, dynamic array properties)
+					if ($el->hasAttribute('cm')) {
+						$out['sp'] = 1;
+					}
 				}
 			}
 		}

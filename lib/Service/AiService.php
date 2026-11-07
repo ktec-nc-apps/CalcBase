@@ -19,11 +19,11 @@ use OCP\IUserManager;
  *
  * What the assistant may do is set by the administrator: whether it is on, who
  * may use it, which apps it may read (read only -- it never changes anything in
- * them), and whether it may search the web. It reads only what the browser sends
- * with a question -- the open book's sheet, as text, and what the page read for
- * it from an allowed app -- and changes nothing itself: the cells it proposes
- * come back in the answer's shape (see AiScenario) for the browser to apply as
- * one step the person can undo.
+ * them), whether it may read the writer's other books and make, change and delete
+ * books (AiTools, with the writer's rights), and whether it may search the web.
+ * The open book is sent by the browser with a question, and the cells the assistant
+ * proposes for it come back in the answer's shape (see AiScenario) for the browser
+ * to apply as one step the person can undo.
  */
 class AiService {
 	public const KEY_ENABLED = 'ai_enabled';
@@ -33,6 +33,11 @@ class AiService {
 	public const KEY_SEARCH = 'ai_search';
 	/** What the assistant may be allowed to read: the apps CalcBase can bring sheets in from. */
 	public const SOURCES = Connectors::SOURCES;
+	/**
+	 * And what it may do with the writer's own books (the owner, 2026-11-07): read the other
+	 * books, and make, change and delete books (AiTools).
+	 */
+	public const EXTRA = ['books', 'write'];
 	/** The name CalcBase's assistant is registered under at AI-Hub. */
 	public const SCENARIO = 'assistant';
 	/** The most one turn of the conversation may carry to AI-Hub (characters). */
@@ -82,6 +87,8 @@ class AiService {
 			// Who may ask is the administrator's CalcBase setting, and the hub holds
 			// to it on every way in -- not only through CalcBase's own controller.
 			'allow' => fn (string $uid): bool => $this->allowed($uid),
+			// the writer's other books (AiTools); each tool looks up what is allowed when it runs
+			'tools' => \OCP\Server::get(AiTools::class)->tools(fn (): array => $this->settings()['read']),
 		]);
 	}
 
@@ -116,7 +123,7 @@ class AiService {
 			'enabled' => $get(self::KEY_ENABLED, 'no') === 'yes',
 			'users' => $get(self::KEY_USERS, 'all') === 'groups' ? 'groups' : 'all',
 			'groups' => is_array($groups) ? array_values(array_filter($groups, 'is_string')) : [],
-			'read' => is_array($read) ? array_values(array_intersect(self::SOURCES, $read)) : [],
+			'read' => is_array($read) ? array_values(array_intersect(array_merge(self::SOURCES, self::EXTRA), $read)) : [],
 			'search' => $get(self::KEY_SEARCH, 'no') === 'yes',
 		];
 	}
@@ -130,7 +137,7 @@ class AiService {
 		$groups = array_values(array_filter($groups, fn ($g) => is_string($g) && $this->groups->groupExists($g)));
 		$set(self::KEY_GROUPS, json_encode($groups));
 		$read = is_array($in['read'] ?? null) ? $in['read'] : [];
-		$set(self::KEY_READ, json_encode(array_values(array_intersect(self::SOURCES, $read))));
+		$set(self::KEY_READ, json_encode(array_values(array_intersect(array_merge(self::SOURCES, self::EXTRA), $read))));
 		$set(self::KEY_SEARCH, !empty($in['search']) ? 'yes' : 'no');
 		return $this->settings();
 	}
@@ -172,7 +179,9 @@ class AiService {
 			'ready' => $hub['ready'],
 			'reason' => $hub['reason'],
 			'model' => $hub['model'],
-			'read' => array_values(array_filter($s['read'], fn ($a) => $this->apps->isEnabledForUser($a === 'calendar' ? 'dav' : $a))),
+			'read' => array_values(array_filter($s['read'], fn ($a) => in_array($a, self::SOURCES, true) && $this->apps->isEnabledForUser($a === 'calendar' ? 'dav' : $a))),
+			// what it may do with the writer's own books
+			'books' => array_values(array_intersect(self::EXTRA, $s['read'])),
 			'search' => $s['search'] && $hub['search'],
 			// whether the person may paste or drop images into a question
 			'images' => $this->imagesOk(),
@@ -208,8 +217,10 @@ class AiService {
 		$messages[] = ['role' => 'user', 'text' => mb_substr($message, 0, self::MAX_TURN_CHARS)];
 		$messages = self::withoutForbiddenReadings($messages, $st['read']);
 		$this->registerScenario();
+		// the book open in the asking page: the tools leave it to the page (AI-Hub answers elsewhere)
+		\OCP\Server::get(AiTools::class)->noteOpen($uid, is_numeric($context['id'] ?? null) ? (int)$context['id'] : 0);
 		$options = [
-			'context' => AiScenario::perQuestion($st['read'], $st['search'], $context, $lang),
+			'context' => AiScenario::perQuestion($st['read'], $st['search'], $context, $lang, $st['books']),
 			'search' => $st['search'],
 		];
 		if ($images !== []) {
@@ -276,6 +287,17 @@ class AiService {
 		$reply = is_string($answer['reply'] ?? null) ? $answer['reply'] : (string)($out['text'] ?? '');
 		$result = [
 			'state' => 'done',
+			// the tools it used: after one that changed a book the page reloads the list
+			'tools' => array_values(array_filter((array)($out['tools'] ?? []), 'is_string')),
+			// what the tools actually did, as AI-Hub recorded it from each call (not the model's
+			// words): shown under the answer as "Actions taken", failures as failures
+			'actions' => array_values(array_map(static fn (array $a): array => [
+				'tool' => (string)($a['tool'] ?? ''),
+				'label' => mb_substr((string)($a['label'] ?? $a['tool'] ?? ''), 0, 120),
+				'kind' => (string)($a['kind'] ?? ''),
+				'ok' => !empty($a['ok']),
+				'report' => mb_substr((string)($a['report'] ?? ''), 0, 1000),
+			], array_filter((array)($out['actions'] ?? []), 'is_array'))),
 			'text' => (string)($out['text'] ?? ''),
 			'reply' => $reply,
 			'edits' => self::cleanEdits(is_array($answer['edits'] ?? null) ? $answer['edits'] : []),
