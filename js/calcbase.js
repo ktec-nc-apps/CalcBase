@@ -6442,7 +6442,19 @@
         const j = i + d; if (j < 0 || j >= UIS.length) { return; }
         this.structural(() => { const [u] = UIS.splice(i, 1); UIS.splice(j, 0, u); wb.moveSheet(u.name, j); if (this.active === i) { this.active = j; } else if (this.active === j) { this.active = i; } });
       },
-      startRenameSheet(i) { if (this.book.readOnly) { return; } this.renameSheet = { idx: i, text: UIS[i].name }; this.$nextTick(() => { const el = this.$refs.renameInput; const inp = Array.isArray(el) ? el[0] : el; if (inp) { inp.focus(); inp.select(); } }); },
+      async startRenameSheet(i) {
+        if (this.book.readOnly) { return; }
+        // The field for the name lives in the sheet tabs, which are hidden unless
+        // asked for (or on a narrow screen): from the sheet bar, "Rename…" did
+        // nothing then (GitHub CalcBase #1). Without the tabs, ask in a dialog.
+        if (!(this.settings.sheetTabs || this.narrow)) {
+          const name = await this.askFor({ title: this.t('Rename'), label: this.t('Name'), value: UIS[i].name });
+          if (name == null) { return; }
+          this.renameSheet = { idx: i, text: name.slice(0, 60) };
+          this.finishRenameSheet();
+          return;
+        }
+        this.renameSheet = { idx: i, text: UIS[i].name }; this.$nextTick(() => { const el = this.$refs.renameInput; const inp = Array.isArray(el) ? el[0] : el; if (inp) { inp.focus(); inp.select(); } }); },
       finishRenameSheet() {
         const i = this.renameSheet.idx; if (i < 0) { return; }
         const name = this.renameSheet.text.trim(); this.renameSheet.idx = -1;

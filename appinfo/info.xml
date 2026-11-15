@@ -38,7 +38,7 @@ CalcBase は、文書を標準の HTML で保存するワープロ EditBase か�
 - AI-Hub アプリを使った AI アシスタント。表計算と Calc の数式に詳しいチャットがシートの横に表示され、セルの変更を提案します。提案された変更は、1回の操作で元に戻せる形で適用されます
 - 日本語・英語の画面、ライト／ダークテーマ
 - HTML5 と CSS が基本です。ブックはブラウザーさえあれば読めます。JavaScript は HTML と CSS ではできないことにだけ使います]]></description>
-	<version>0.1.2</version>
+	<version>0.1.3</version>
 	<licence>agpl</licence>
 	<author>KTEC</author>
 	<namespace>CalcBase</namespace>

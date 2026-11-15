@@ -3,6 +3,12 @@
 All notable changes to CalcBase are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.3] — 2026-11-16
+
+### Fixed
+- "Rename…" for a sheet did nothing while the sheet tabs under the sheet were hidden, which they are by default: the field for the new name exists only in the tabs. Now, without the tabs, it asks for the name in a small dialog. (GitHub #1)
+  （シートの「名前の変更」が、シートの下のタブを表示していないとき（既定）に何もしませんでした。名前を入れる欄がタブの中にしかなかったためです。タブを表示していないときは、小さな画面で新しい名前を聞くようにしました。）
+
 ## [0.1.2] — 2026-11-08
 
 The AI assistant can now work with all of the writer's books; Excel 365's dynamic array functions; the screen in twenty-one languages.

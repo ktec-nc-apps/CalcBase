@@ -65,7 +65,11 @@ function world(array $core): array {
 	$me = $people['alice'];
 	$plugin = new UserPlugin($appConfig, $users, $groupManager, stub(OCP\Teams\ITeamManager::class),
 		stub(OCP\IUserSession::class, ['getUser' => static fn () => $me]), stub(OCP\UserStatus\IManager::class), stub(OCP\IDBConnection::class));
-	$search = new Search(stub(OCP\IContainer::class, ['resolve' => static fn ($name) => $name === UserPlugin::class ? $plugin : new SearchResult()]));
+	$container = stub(OCP\IContainer::class, ['resolve' => static fn ($name) => $name === UserPlugin::class ? $plugin : new SearchResult()]);
+	// Nextcloud 34.0.6 gave Search a second argument, the system config (for the lookup server).
+	$search = (new ReflectionMethod(Search::class, '__construct'))->getNumberOfParameters() >= 2
+		? new Search($container, stub(OCP\IConfig::class, ['getSystemValueString' => static fn ($k, $d = '') => '']))
+		: new Search($container);
 	$search->registerPlugin(['shareType' => 'SHARE_TYPE_USER', 'class' => UserPlugin::class]);
 
 	$made = new ArrayObject();
